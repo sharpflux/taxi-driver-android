@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Base gradient background that resembles yellow -->
+    <gradient
+        android:type="linear"
+        android:angle="270"
+        android:startColor="#FFEB3B"
+        android:centerColor="#FFB300"
+        android:endColor="#FBC02D" />
+
+    <!-- Adding wave-like pattern -->
+    <!--    <item>-->
+    <!--        <bitmap-->
+    <!--            android:src="@drawable/wave_pattern"-->
+    <!--            android:tileMode="repeat"-->
+    <!--            android:gravity="center"-->
+    <!--            android:alpha="0.15" />-->
+    <!--    </item>-->
+</shape>
