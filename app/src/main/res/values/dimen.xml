@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+<!--    <string name="app_name">TaxiApp</string>-->
+<!--    <dimen name="dot_size">12dp</dimen>-->
+    <dimen name="dot_size">8dp</dimen>
+    <dimen name="dot_active_width">24dp</dimen>
+
+    <!-- Onboarding strings -->
+    <string name="onboarding_skip">Skip</string>
+    <string name="onboarding_next">Next</string>
+    <string name="onboarding_get_started">Get Started</string>
+    <string name="onboarding_image_desc">Onboarding illustration</string>
+
+    <!-- Onboarding content -->
+    <string name="onboarding_title_1">Welcome to TaxiApp</string>
+    <string name="onboarding_desc_1">Your reliable ride-sharing companion for safe and convenient transportation</string>
+
+    <string name="onboarding_title_2">Book a Ride</string>
+    <string name="onboarding_desc_2">Easily book a ride in just a few taps. Quick, simple, and hassle-free</string>
+
+    <string name="onboarding_title_3">Track Your Journey</string>
+    <string name="onboarding_desc_3">Real-time tracking keeps you informed about your ride\'s location and arrival time</string>
+</resources>

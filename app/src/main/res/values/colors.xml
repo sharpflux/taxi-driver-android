@@ -7,4 +7,57 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="overlay_dark">#80000000</color>
+
+    <color name="scanner_corner_red">#FF6B6B</color>
+    <color name="scanner_corner_yellow">#FFD93D</color>
+    <color name="scanner_corner_teal">#4ECDC4</color>
+    <color name="scanner_corner_green">#6BCF7F</color>
+    <color name="scanner_background">#000000</color>
+    <color name="scanner_button_overlay">#33000000</color>
+    <color name="scanner_text_primary">#FFFFFF</color>
+    <color name="scanner_text_secondary">#CCCCCC</color>
+    <color name="scanner_upload_background">#E0E0E0</color>
+    <color name="scanner_upload_text">#666666</color>
+
+    <!-- Primary Colors -->
+    <color name="primary_color">#FF6B35</color>
+    <color name="primary_dark">#E55A2B</color>
+    <color name="accent_color">#FFA726</color>
+
+    <!-- Background Colors -->
+    <color name="onboarding_background">#FFFFFF</color>
+
+    <!-- Text Colors -->
+    <color name="text_primary">#212121</color>
+    <color name="text_secondary">#757575</color>
+
+    <!-- Indicator Colors -->
+    <color name="dot_inactive">#E0E0E0</color>
+
+<!--    <color name="primary_color">#1976D2</color>-->
+<!--    <color name="primary_dark">#1565C0</color>-->
+    <color name="primary_light">#BBDEFB</color>
+
+    <!-- Secondary Colors -->
+    <color name="secondary_color">#FF9800</color>
+    <color name="secondary_dark">#F57C00</color>
+    <color name="secondary_light">#FFE0B2</color>
+
+    <!-- Background Colors -->
+    <color name="background_color">#FAFAFA</color>
+    <color name="surface_color">#FFFFFF</color>
+
+    <!-- Text Colors -->
+
+    <color name="text_hint">#BDBDBD</color>
+
+    <!-- Status Colors -->
+    <color name="error_color">#F44336</color>
+    <color name="success_color">#4CAF50</color>
+    <color name="warning_color">#FF9800</color>
+
+    <!-- Other Colors -->
+    <color name="divider_color">#E0E0E0</color>
+    <color name="disabled_color">#BDBDBD</color>
 </resources>

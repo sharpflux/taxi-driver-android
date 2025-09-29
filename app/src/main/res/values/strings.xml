@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">TaxiApp</string>
+    <string name="onboarding_image">Onboarding Image</string>
+<!--    <string name="onboarding_image">Onboarding illustration</string>-->
 </resources>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Transparent background -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#66000000"/>
+        </shape>
+    </item>
+
+    <!-- Clear center square -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@android:color/transparent"/>
+            <size android:width="240dp" android:height="240dp"/>
+        </shape>
+        <gravity android:gravity="center"/>
+    </item>
+
+    <!-- Four corner strokes -->
+<!--    <item android:drawable="@drawable/corner_top_left" android:gravity="top|left"/>-->
+<!--    <item android:drawable="@drawable/corner_top_right" android:gravity="top|right"/>-->
+<!--    <item android:drawable="@drawable/corner_bottom_left" android:gravity="bottom|left"/>-->
+<!--    <item android:drawable="@drawable/corner_bottom_right" android:gravity="bottom|right"/>-->
+</layer-list>

@@ -1,6 +1,7 @@
 package com.sharpflux.taxiapp.ui.activities;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.animation.AlphaAnimation;
@@ -16,6 +17,8 @@ public class SplashActivity extends AppCompatActivity {
 
     // Splash screen display time in milliseconds
     private static final int SPLASH_DURATION = 3000;
+    private static final String PREFS_NAME = "OnboardingPrefs";
+    private static final String KEY_ONBOARDING_COMPLETED = "onboarding_completed";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,7 +64,13 @@ public class SplashActivity extends AppCompatActivity {
 
         // Delay and navigate to the main activity
         new Handler().postDelayed(() -> {
-            Intent intent = new Intent(SplashActivity.this, LoginActivity.class); // Replace with your main activity
+            SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+            boolean isOnboardingCompleted = prefs.getBoolean(KEY_ONBOARDING_COMPLETED, false);
+            Intent intent;
+
+
+                intent = new Intent(SplashActivity.this, OnboardingActivity.class);
+
             startActivity(intent);
             finish(); // Close the splash activity so it's not in the back stack
             overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out); // Smooth transition
