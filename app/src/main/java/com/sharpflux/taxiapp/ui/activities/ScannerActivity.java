@@ -26,6 +26,7 @@ import androidx.camera.view.PreviewView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.mlkit.vision.barcode.BarcodeScanner;
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions;
@@ -48,6 +49,7 @@ public class ScannerActivity extends AppCompatActivity {
     private ImageButton btnBack, btnFlash, btnQR, btnMenu;
     private LinearLayout btnUploadFromGallery;
     private View centerOverlay;
+    private BottomNavigationView bottomNavigationView;
 
     private ProcessCameraProvider cameraProvider;
     private Camera camera;
@@ -64,6 +66,7 @@ public class ScannerActivity extends AppCompatActivity {
         initViews();
         initBarcodeScanner();
         setupClickListeners();
+        setupBottomNavigation();
 
         // Initialize camera executor
         cameraExecutor = Executors.newSingleThreadExecutor();
@@ -92,6 +95,7 @@ public class ScannerActivity extends AppCompatActivity {
         btnMenu = findViewById(R.id.btnMenu);
         btnUploadFromGallery = findViewById(R.id.btnUploadFromGallery);
         centerOverlay = findViewById(R.id.centerOverlay);
+        bottomNavigationView = findViewById(R.id.bottom_navigation);
     }
 
     private void initBarcodeScanner() {
@@ -113,6 +117,34 @@ public class ScannerActivity extends AppCompatActivity {
                 Toast.makeText(this, "Menu clicked", Toast.LENGTH_SHORT).show());
 
         btnUploadFromGallery.setOnClickListener(v -> openGallery());
+    }
+
+    private void setupBottomNavigation() {
+        bottomNavigationView.setSelectedItemId(R.id.nav_scanner);
+
+        bottomNavigationView.setOnItemSelectedListener(item -> {
+            int id = item.getItemId();
+
+            if (id == R.id.nav_home) {
+                startActivity(new Intent(ScannerActivity.this, HomeActivity.class));
+                overridePendingTransition(0, 0);
+                finish();
+                return true;
+            } else if (id == R.id.nav_scanner) {
+                return true;
+            } else if (id == R.id.nav_profile) {
+                startActivity(new Intent(ScannerActivity.this, ProfileActivity.class));
+                overridePendingTransition(0, 0);
+                finish();
+                return true;
+            } else if (id == R.id.nav_settings) {
+                startActivity(new Intent(ScannerActivity.this, SignUpActivity.class));
+                overridePendingTransition(0, 0);
+                finish();
+                return true;
+            }
+            return false;
+        });
     }
 
     private void openGallery() {
@@ -253,17 +285,13 @@ public class ScannerActivity extends AppCompatActivity {
             isScanning = false;
             stopScanAnimation();
 
-            // Show success feedback
             Toast.makeText(this, "QR Code Scanned Successfully!", Toast.LENGTH_LONG).show();
+            Log.d("Scanner", "QR Result = " + barcode);
 
-            // Process the scan result
-            processScanResult(barcode);
-
-            // Resume scanning after 3 seconds
-            previewView.postDelayed(() -> {
-                isScanning = true;
-                startScanAnimation();
-            }, 3000);
+            // Send scanned data to BillActivity
+            Intent intent = new Intent(ScannerActivity.this, BillActivity.class);
+            intent.putExtra("SCANNED_DATA", barcode);
+            startActivity(intent);
         });
     }
 
@@ -380,6 +408,11 @@ public class ScannerActivity extends AppCompatActivity {
         super.onResume();
         isScanning = true;
         startScanAnimation();
+
+        // Update bottom navigation selection
+        if (bottomNavigationView != null) {
+            bottomNavigationView.setSelectedItemId(R.id.nav_scanner);
+        }
 
         // Restart camera if needed
         if (cameraProvider == null && allPermissionsGranted()) {

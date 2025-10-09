@@ -47,6 +47,10 @@ dependencies {
     implementation("androidx.core:core-splashscreen:1.0.1")
 
 
+    implementation("androidx.fragment:fragment-ktx:1.8.4")
+    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
+
+
     implementation(libs.appcompat)
     implementation(libs.material)
     testImplementation(libs.junit)

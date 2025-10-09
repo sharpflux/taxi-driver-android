@@ -52,6 +52,7 @@ public class LoginActivity extends AppCompatActivity {
     private void setupClickListeners() {
         Button btnLogin = findViewById(R.id.btnLogin);
         TextView tvForgotPassword = findViewById(R.id.tvForgotPassword);
+        TextView tvSignUp = findViewById(R.id.tvSignUp);
         LinearLayout btnGoogleLogin = findViewById(R.id.btnGoogleLogin);
         LinearLayout btnAppleLogin = findViewById(R.id.btnAppleLogin);
 
@@ -103,6 +104,11 @@ public class LoginActivity extends AppCompatActivity {
         tvForgotPassword.setOnClickListener(v ->
                 Toast.makeText(this, "Forgot password coming soon", Toast.LENGTH_SHORT).show()
         );
+
+        tvSignUp.setOnClickListener(v -> {
+            // Navigate to SignUpActivity
+            startActivity(new Intent(LoginActivity.this, SignUpActivity.class));
+        });
 
         btnGoogleLogin.setOnClickListener(v ->
                 Toast.makeText(this, "Google login coming soon", Toast.LENGTH_SHORT).show()

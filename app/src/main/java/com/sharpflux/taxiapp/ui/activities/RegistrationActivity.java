@@ -1,684 +1,325 @@
 package com.sharpflux.taxiapp.ui.activities;
 
-import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.text.TextUtils;
 import android.util.Log;
-import android.util.Patterns;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
-import android.widget.CheckBox;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.android.volley.Request;
-import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonArrayRequest;
-import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.Volley;
-import com.google.android.material.button.MaterialButton;
-import com.google.android.material.textfield.TextInputEditText;
-import com.google.android.material.textfield.TextInputLayout;
 import com.sharpflux.taxiapp.R;
-import com.sharpflux.taxiapp.data.network.APIs;
+import com.sharpflux.taxiapp.data.model.Customer;
+import com.sharpflux.taxiapp.data.model.DropdownItem;
+import com.sharpflux.taxiapp.data.model.Registration;
+import com.sharpflux.taxiapp.data.repository.CustomerRepository;
+import com.sharpflux.taxiapp.data.repository.RegistrationRepository;
 
-import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class RegistrationActivity extends AppCompatActivity {
-
     private static final String TAG = "RegistrationActivity";
 
-    // Views
-    private ImageButton btnBack;
-    private TextInputEditText etFirstName, etMiddleName, etLastName;
-    private TextInputEditText etEmail, etPhoneNumber, etAddress;
-    private TextInputEditText etPassword, etConfirmPassword;
-    private AutoCompleteTextView actvState, actvCity, actvLocation;
-    private CheckBox cbTerms;
-    private MaterialButton btnRegister;
-    private TextView tvLoginLink;
-    private ProgressBar progressBar;
+    private EditText etFirstName, etMiddleName, etLastName, etEmail, etMobileNumber, etAddress, etPincode;
+    private AutoCompleteTextView actvCity, actvState;
+    private ImageButton btnBackArrow;
+    private Button btnEdit, btnSave;
 
-    // Input Layouts for error handling
-    private TextInputLayout tilFirstName, tilLastName, tilEmail, tilPhoneNumber;
-    private TextInputLayout tilAddress, tilPassword, tilConfirmPassword;
-    private TextInputLayout tilState, tilCity, tilLocation;
-
-    // Data
-    private List<StateData> stateList = new ArrayList<>();
-    private List<CityData> cityList = new ArrayList<>();
-    private List<LocationData> locationList = new ArrayList<>();
-
-    private int selectedStateId = 0;
-    private int selectedCityId = 0;
-    private int selectedLocationId = 0;
-
-    private RequestQueue requestQueue;
+    private List<DropdownItem> stateList = new ArrayList<>();
+    private List<DropdownItem> cityList = new ArrayList<>();
+    private ArrayAdapter<DropdownItem> stateAdapter;
+    private ArrayAdapter<DropdownItem> cityAdapter;
+    private boolean isEditing = false;
+    private CustomerRepository customerRepository;
+    private RegistrationRepository registrationRepository;
+    private Customer currentCustomer;
+    private int customerId = 0; // You can pass this from previous activity via Intent
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_registration);
 
-        initViews();
-        setupClickListeners();
-        initRequestQueue();
-        loadStates();
+        initializeViews();
+        initializeRepositories();
+        setupListeners();
+        loadDropdownData();
+
+        // Get customer ID from intent if passed
+        if (getIntent().hasExtra("CUSTOMER_ID")) {
+            customerId = getIntent().getIntExtra("CUSTOMER_ID", 0);
+        }
+
+        // Load customer data
+        if (customerId > 0) {
+            loadCustomerData(customerId);
+        } else {
+            // Load first customer for demo (or keep fields empty for new registration)
+            loadCustomerData(1); // Change this based on your requirement
+        }
     }
 
-    private void initViews() {
-        btnBack = findViewById(R.id.btnBack);
-
-        // Personal info
+    private void initializeViews() {
         etFirstName = findViewById(R.id.etFirstName);
         etMiddleName = findViewById(R.id.etMiddleName);
         etLastName = findViewById(R.id.etLastName);
-
-        // Contact info
         etEmail = findViewById(R.id.etEmail);
-        etPhoneNumber = findViewById(R.id.etPhoneNumber);
-
-        // Address info
+        etMobileNumber = findViewById(R.id.etMobileNumber);
         etAddress = findViewById(R.id.etAddress);
-        actvState = findViewById(R.id.actvState);
+        etPincode = findViewById(R.id.etPincode);
         actvCity = findViewById(R.id.actvCity);
-        actvLocation = findViewById(R.id.actvLocation);
+        actvState = findViewById(R.id.actvState);
 
-        // Security
-        etPassword = findViewById(R.id.etPassword);
-        etConfirmPassword = findViewById(R.id.etConfirmPassword);
+        btnBackArrow = findViewById(R.id.btnBackArrow);
+        btnEdit = findViewById(R.id.btnEdit);
+        btnSave = findViewById(R.id.btnSave);
 
-        // Other elements
-        cbTerms = findViewById(R.id.cbTerms);
-        btnRegister = findViewById(R.id.btnRegister);
-        tvLoginLink = findViewById(R.id.tvLoginLink);
-        progressBar = findViewById(R.id.progressBar);
-
-        // Input Layouts
-        tilFirstName = findViewById(R.id.tilFirstName);
-        tilLastName = findViewById(R.id.tilLastName);
-        tilEmail = findViewById(R.id.tilEmail);
-        tilPhoneNumber = findViewById(R.id.tilPhoneNumber);
-        tilAddress = findViewById(R.id.tilAddress);
-        tilPassword = findViewById(R.id.tilPassword);
-        tilConfirmPassword = findViewById(R.id.tilConfirmPassword);
-        tilState = findViewById(R.id.tilState);
-        tilCity = findViewById(R.id.tilCity);
-        tilLocation = findViewById(R.id.tilLocation);
+        // Add ProgressBar to your layout if not already present
+        // progressBar = findViewById(R.id.progressBar);
     }
 
-    private void setupClickListeners() {
-        btnBack.setOnClickListener(v -> onBackPressed());
+    private void initializeRepositories() {
+        customerRepository = new CustomerRepository(this);
+        registrationRepository = new RegistrationRepository(this);
+    }
 
-        btnRegister.setOnClickListener(v -> {
-            if (validateInput()) {
-                registerCustomer();
+    private void setupListeners() {
+        btnBackArrow.setOnClickListener(v -> finish());
+        btnEdit.setOnClickListener(v -> enableEditing());
+        btnSave.setOnClickListener(v -> saveProfile());
+    }
+
+    private void loadCustomerData(int startIndex) {
+        showLoading(true);
+        SharedPreferences prefs = getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
+        int customersId = prefs.getInt("user_id", 0);
+        customerRepository.getCustomers(startIndex, 10, "0", "0",customersId,
+                new CustomerRepository.CustomerCallback() {
+                    @Override
+                    public void onSuccess(List<Customer> customers) {
+                        showLoading(false);
+                        if (customers != null && !customers.isEmpty()) {
+                            currentCustomer = customers.get(0);
+                            bindCustomerData(currentCustomer);
+                        } else {
+                            Toast.makeText(RegistrationActivity.this,
+                                    "No customer data found", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        showLoading(false);
+                        Toast.makeText(RegistrationActivity.this,
+                                "Error loading data: " + error, Toast.LENGTH_LONG).show();
+                    }
+                });
+
+    }
+
+    private void bindCustomerData(Customer customer) {
+        if (customer == null) return;
+
+        etFirstName.setText(customer.getFirstName() != null ? customer.getFirstName() : "");
+        etMiddleName.setText(customer.getMiddleName() != null ? customer.getMiddleName() : "");
+        etLastName.setText(customer.getLastName() != null ? customer.getLastName() : "");
+        etEmail.setText(customer.getEmailId() != null ? customer.getEmailId() : "");
+        etMobileNumber.setText(customer.getPhoneNumber() != null ? customer.getPhoneNumber() : "");
+        etAddress.setText(customer.getAddress() != null ? customer.getAddress() : "");
+        etPincode.setText(customer.getPincode() != null ? customer.getPincode() : "");
+
+        // Set state and city after dropdowns are loaded
+        if (customer.getStateId() > 0) {
+            for (DropdownItem item : stateList) {
+                if (item.getId() == customer.getStateId()) {
+                    actvState.setText(item.getText(), false);
+                    loadCities(customer.getStateId());
+                    break;
+                }
             }
-        });
+        }
 
-        tvLoginLink.setOnClickListener(v -> {
-            // Navigate to login activity
-            Intent intent = new Intent(this, LoginActivity.class);
-            startActivity(intent);
-            finish();
-        });
-
-        // State selection listener
-        actvState.setOnItemClickListener((parent, view, position, id) -> {
-            StateData selectedState = stateList.get(position);
-            selectedStateId = selectedState.getId();
-            actvState.setText(selectedState.getName());
-
-            // Reset city and location
-            actvCity.setText("");
-            actvLocation.setText("");
-            selectedCityId = 0;
-            selectedLocationId = 0;
-
-            // Enable city dropdown and load cities
-            actvCity.setEnabled(true);
-            loadCities(selectedStateId);
-        });
-
-        // City selection listener
-        actvCity.setOnItemClickListener((parent, view, position, id) -> {
-            CityData selectedCity = cityList.get(position);
-            selectedCityId = selectedCity.getId();
-            actvCity.setText(selectedCity.getName());
-
-            // Reset location
-            actvLocation.setText("");
-            selectedLocationId = 0;
-
-            // Enable location dropdown and load locations
-            actvLocation.setEnabled(true);
-            loadLocations(selectedCityId);
-        });
-
-        // Location selection listener
-        actvLocation.setOnItemClickListener((parent, view, position, id) -> {
-            LocationData selectedLocation = locationList.get(position);
-            selectedLocationId = selectedLocation.getId();
-            actvLocation.setText(selectedLocation.getName());
-        });
-    }
-
-    private void initRequestQueue() {
-        requestQueue = Volley.newRequestQueue(this);
-    }
-
-    private void loadStates() {
-        String url = APIs.Main_URL + "States"; // Adjust endpoint as per your API
-
-        JsonArrayRequest request = new JsonArrayRequest(
-                Request.Method.GET, url, null,
-                new Response.Listener<JSONArray>() {
-                    @Override
-                    public void onResponse(JSONArray response) {
-                        try {
-                            stateList.clear();
-                            for (int i = 0; i < response.length(); i++) {
-                                JSONObject stateObj = response.getJSONObject(i);
-                                int id = stateObj.getInt("id");
-                                String name = stateObj.getString("name");
-                                stateList.add(new StateData(id, name));
-                            }
-
-                            ArrayAdapter<StateData> adapter = new ArrayAdapter<>(
-                                    RegistrationActivity.this,
-                                    android.R.layout.simple_dropdown_item_1line, stateList);
-                            actvState.setAdapter(adapter);
-
-                        } catch (JSONException e) {
-                            Log.e(TAG, "Error parsing states", e);
-                            loadDummyStates(); // Fallback to dummy data
-                        }
-                    }
-                },
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Log.e(TAG, "Error loading states", error);
-                        loadDummyStates(); // Fallback to dummy data
-                    }
+        if (customer.getCityId() > 0) {
+            for (DropdownItem item : cityList) {
+                if (item.getId() == customer.getCityId()) {
+                    actvCity.setText(item.getText(), false);
+                    break;
                 }
-        );
-
-        requestQueue.add(request);
+            }
+        }
     }
 
-    private void loadDummyStates() {
-        // Fallback dummy data
-        stateList.clear();
-        stateList.add(new StateData(1, "Maharashtra"));
-        stateList.add(new StateData(2, "Karnataka"));
-        stateList.add(new StateData(3, "Tamil Nadu"));
-        stateList.add(new StateData(4, "Gujarat"));
-
-        ArrayAdapter<StateData> adapter = new ArrayAdapter<>(this,
+    private void setupCityStateAdapters() {
+        stateAdapter = new ArrayAdapter<>(this,
                 android.R.layout.simple_dropdown_item_1line, stateList);
-        actvState.setAdapter(adapter);
-    }
+        actvState.setAdapter(stateAdapter);
 
-    private void loadCities(int stateId) {
-        String url = APIs.Main_URL + "Cities/" + stateId; // Adjust endpoint as per your API
-
-        JsonArrayRequest request = new JsonArrayRequest(
-                Request.Method.GET, url, null,
-                new Response.Listener<JSONArray>() {
-                    @Override
-                    public void onResponse(JSONArray response) {
-                        try {
-                            cityList.clear();
-                            for (int i = 0; i < response.length(); i++) {
-                                JSONObject cityObj = response.getJSONObject(i);
-                                int id = cityObj.getInt("id");
-                                String name = cityObj.getString("name");
-                                cityList.add(new CityData(id, name, stateId));
-                            }
-
-                            ArrayAdapter<CityData> adapter = new ArrayAdapter<>(
-                                    RegistrationActivity.this,
-                                    android.R.layout.simple_dropdown_item_1line, cityList);
-                            actvCity.setAdapter(adapter);
-
-                        } catch (JSONException e) {
-                            Log.e(TAG, "Error parsing cities", e);
-                            loadDummyCities(stateId);
-                        }
-                    }
-                },
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Log.e(TAG, "Error loading cities", error);
-                        loadDummyCities(stateId);
-                    }
-                }
-        );
-
-        requestQueue.add(request);
-    }
-
-    private void loadDummyCities(int stateId) {
-        // Fallback dummy data
-        cityList.clear();
-
-        switch (stateId) {
-            case 1: // Maharashtra
-                cityList.add(new CityData(1, "Mumbai", stateId));
-                cityList.add(new CityData(2, "Pune", stateId));
-                cityList.add(new CityData(3, "Nashik", stateId));
-                break;
-            case 2: // Karnataka
-                cityList.add(new CityData(4, "Bangalore", stateId));
-                cityList.add(new CityData(5, "Mysore", stateId));
-                cityList.add(new CityData(6, "Mangalore", stateId));
-                break;
-            case 3: // Tamil Nadu
-                cityList.add(new CityData(7, "Chennai", stateId));
-                cityList.add(new CityData(8, "Coimbatore", stateId));
-                cityList.add(new CityData(9, "Madurai", stateId));
-                break;
-            case 4: // Gujarat
-                cityList.add(new CityData(10, "Ahmedabad", stateId));
-                cityList.add(new CityData(11, "Surat", stateId));
-                cityList.add(new CityData(12, "Vadodara", stateId));
-                break;
-            default:
-                cityList.add(new CityData(100, "Default City", stateId));
-                break;
-        }
-
-        ArrayAdapter<CityData> adapter = new ArrayAdapter<>(this,
+        cityAdapter = new ArrayAdapter<>(this,
                 android.R.layout.simple_dropdown_item_1line, cityList);
-        actvCity.setAdapter(adapter);
+        actvCity.setAdapter(cityAdapter);
     }
 
-    private void loadLocations(int cityId) {
-        String url = APIs.Main_URL + "Locations/" + cityId; // Adjust endpoint as per your API
-
-        JsonArrayRequest request = new JsonArrayRequest(
-                Request.Method.GET, url, null,
-                new Response.Listener<JSONArray>() {
-                    @Override
-                    public void onResponse(JSONArray response) {
-                        try {
-                            locationList.clear();
-                            for (int i = 0; i < response.length(); i++) {
-                                JSONObject locationObj = response.getJSONObject(i);
-                                int id = locationObj.getInt("id");
-                                String name = locationObj.getString("name");
-                                locationList.add(new LocationData(id, name, cityId));
-                            }
-
-                            ArrayAdapter<LocationData> adapter = new ArrayAdapter<>(
-                                    RegistrationActivity.this,
-                                    android.R.layout.simple_dropdown_item_1line, locationList);
-                            actvLocation.setAdapter(adapter);
-
-                        } catch (JSONException e) {
-                            Log.e(TAG, "Error parsing locations", e);
-                            loadDummyLocations(cityId);
-                        }
-                    }
-                },
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Log.e(TAG, "Error loading locations", error);
-                        loadDummyLocations(cityId);
-                    }
-                }
-        );
-
-        requestQueue.add(request);
+    private void enableEditing() {
+        isEditing = true;
+        setFieldsEditable(true);
+        btnEdit.setVisibility(View.GONE);
+        btnSave.setVisibility(View.VISIBLE);
     }
 
-    private void loadDummyLocations(int cityId) {
-        // Fallback dummy data
-        locationList.clear();
-
-        // Sample locations for different cities
-        switch (cityId) {
-            case 1: // Mumbai
-                locationList.add(new LocationData(1, "Andheri", cityId));
-                locationList.add(new LocationData(2, "Bandra", cityId));
-                locationList.add(new LocationData(3, "Powai", cityId));
-                break;
-            case 2: // Pune
-                locationList.add(new LocationData(4, "Hinjewadi", cityId));
-                locationList.add(new LocationData(5, "Koregaon Park", cityId));
-                locationList.add(new LocationData(6, "Wakad", cityId));
-                break;
-            default:
-                locationList.add(new LocationData(100, "Central Area", cityId));
-                locationList.add(new LocationData(101, "North Zone", cityId));
-                locationList.add(new LocationData(102, "South Zone", cityId));
-                break;
+    private void saveProfile() {
+        if (!validateFields()) {
+            return;
         }
 
-        ArrayAdapter<LocationData> adapter = new ArrayAdapter<>(this,
-                android.R.layout.simple_dropdown_item_1line, locationList);
-        actvLocation.setAdapter(adapter);
-    }
-
-    private boolean validateInput() {
-        boolean isValid = true;
-
-        // Clear previous errors
-        clearErrors();
-
-        // First Name validation
-        if (TextUtils.isEmpty(etFirstName.getText())) {
-            tilFirstName.setError("First name is required");
-            isValid = false;
-        }
-
-        // Last Name validation
-        if (TextUtils.isEmpty(etLastName.getText())) {
-            tilLastName.setError("Last name is required");
-            isValid = false;
-        }
-
-        // Email validation
-        String email = etEmail.getText().toString().trim();
-        if (TextUtils.isEmpty(email)) {
-            tilEmail.setError("Email is required");
-            isValid = false;
-        } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            tilEmail.setError("Please enter a valid email");
-            isValid = false;
-        }
-
-        // Phone validation
-        String phone = etPhoneNumber.getText().toString().trim();
-        if (TextUtils.isEmpty(phone)) {
-            tilPhoneNumber.setError("Phone number is required");
-            isValid = false;
-        } else if (phone.length() < 10) {
-            tilPhoneNumber.setError("Please enter a valid phone number");
-            isValid = false;
-        }
-
-        // Address validation
-        if (TextUtils.isEmpty(etAddress.getText())) {
-            tilAddress.setError("Address is required");
-            isValid = false;
-        }
-
-        // State validation
-        if (selectedStateId == 0) {
-            tilState.setError("Please select a state");
-            isValid = false;
-        }
-
-        // City validation
-        if (selectedCityId == 0) {
-            tilCity.setError("Please select a city");
-            isValid = false;
-        }
-
-        // Location validation
-        if (selectedLocationId == 0) {
-            tilLocation.setError("Please select a location");
-            isValid = false;
-        }
-
-        // Password validation
-        String password = etPassword.getText().toString();
-        if (TextUtils.isEmpty(password)) {
-            tilPassword.setError("Password is required");
-            isValid = false;
-        } else if (password.length() < 6) {
-            tilPassword.setError("Password must be at least 6 characters");
-            isValid = false;
-        }
-
-        // Confirm password validation
-        String confirmPassword = etConfirmPassword.getText().toString();
-        if (TextUtils.isEmpty(confirmPassword)) {
-            tilConfirmPassword.setError("Please confirm your password");
-            isValid = false;
-        } else if (!password.equals(confirmPassword)) {
-            tilConfirmPassword.setError("Passwords do not match");
-            isValid = false;
-        }
-
-        // Terms and conditions validation
-        if (!cbTerms.isChecked()) {
-            Toast.makeText(this, "Please accept Terms and Conditions", Toast.LENGTH_SHORT).show();
-            isValid = false;
-        }
-
-        return isValid;
-    }
-
-    private void clearErrors() {
-        tilFirstName.setError(null);
-        tilLastName.setError(null);
-        tilEmail.setError(null);
-        tilPhoneNumber.setError(null);
-        tilAddress.setError(null);
-        tilState.setError(null);
-        tilCity.setError(null);
-        tilLocation.setError(null);
-        tilPassword.setError(null);
-        tilConfirmPassword.setError(null);
-    }
-
-    private void registerCustomer() {
         showLoading(true);
 
-        String url = APIs.Main_URL + "Customers/register"; // Adjust endpoint as per your API
+        // Create Registration object from form data
+        Registration registration = new Registration();
+        registration.setFirstName(etFirstName.getText().toString().trim());
+        registration.setMiddleName(etMiddleName.getText().toString().trim());
+        registration.setLastName(etLastName.getText().toString().trim());
+        registration.setEmailId(etEmail.getText().toString().trim());
+        registration.setPhoneNumber(etMobileNumber.getText().toString().trim());
+        registration.setAddress(etAddress.getText().toString().trim());
 
-        try {
-            // Create JSON request body
-            JSONObject requestBody = new JSONObject();
-            requestBody.put("customersId", 0);
-            requestBody.put("locationId", selectedLocationId);
-            requestBody.put("firstName", etFirstName.getText().toString().trim());
-            requestBody.put("middleName", etMiddleName.getText().toString().trim());
-            requestBody.put("lastName", etLastName.getText().toString().trim());
-            requestBody.put("emailId", etEmail.getText().toString().trim());
-            requestBody.put("phoneNumber", etPhoneNumber.getText().toString().trim());
-            requestBody.put("passwordHash", hashPassword(etPassword.getText().toString()));
-            requestBody.put("address", etAddress.getText().toString().trim());
-            requestBody.put("cityId", selectedCityId);
-            requestBody.put("stateId", selectedStateId);
-            requestBody.put("roleId", 2); // Assuming 2 is customer role
-            requestBody.put("isActive", true);
-            requestBody.put("userId", 0);
+        // TODO: Get actual city and state IDs from your dropdown selections
+        registration.setCityId(currentCustomer != null ? currentCustomer.getCityId() : 0);
+        registration.setStateId(currentCustomer != null ? currentCustomer.getStateId() : 0);
+        registration.setRoleId(currentCustomer != null ? currentCustomer.getRoleId() : 1);
+        registration.setActive(true);
 
-            Log.d(TAG, "Registration request: " + requestBody.toString());
-
-            JsonObjectRequest request = new JsonObjectRequest(
-                    Request.Method.POST, url, requestBody,
-                    new Response.Listener<JSONObject>() {
-                        @Override
-                        public void onResponse(JSONObject response) {
-                            showLoading(false);
-                            handleRegistrationResponse(response);
-                        }
-                    },
-                    new Response.ErrorListener() {
-                        @Override
-                        public void onErrorResponse(VolleyError error) {
-                            showLoading(false);
-                            handleRegistrationError(error);
-                        }
+        registrationRepository.registerUser(registration,
+                new RegistrationRepository.RegistrationCallback() {
+                    @Override
+                    public void onSuccess(JSONObject response) {
+                        showLoading(false);
+                        isEditing = false;
+                        setFieldsEditable(false);
+                        btnSave.setVisibility(View.GONE);
+                        btnEdit.setVisibility(View.VISIBLE);
+                        Toast.makeText(RegistrationActivity.this,
+                                "Profile saved successfully!", Toast.LENGTH_SHORT).show();
                     }
-            );
 
-            requestQueue.add(request);
-
-        } catch (JSONException e) {
-            showLoading(false);
-            Log.e(TAG, "Error creating request body", e);
-            Toast.makeText(this, "Error preparing registration data", Toast.LENGTH_SHORT).show();
-        }
+                    @Override
+                    public void onError(String error) {
+                        showLoading(false);
+                        Toast.makeText(RegistrationActivity.this,
+                                "Error saving profile: " + error, Toast.LENGTH_LONG).show();
+                    }
+                });
     }
 
-    private void handleRegistrationResponse(JSONObject response) {
-        try {
-            boolean success = response.optBoolean("success", false);
-            String message = response.optString("message", "Registration completed");
-
-            if (success) {
-                Toast.makeText(this, "Registration successful!", Toast.LENGTH_LONG).show();
-
-                // Navigate to login activity
-                Intent intent = new Intent(this, LoginActivity.class);
-                intent.putExtra("email", etEmail.getText().toString().trim());
-                startActivity(intent);
-                finish();
-            } else {
-                Toast.makeText(this, message, Toast.LENGTH_LONG).show();
-            }
-
-        } catch (Exception e) {
-            Log.e(TAG, "Error parsing registration response", e);
-            Toast.makeText(this, "Registration completed but response unclear", Toast.LENGTH_SHORT).show();
+    private boolean validateFields() {
+        if (etFirstName.getText().toString().trim().isEmpty()) {
+            etFirstName.setError("First name is required");
+            etFirstName.requestFocus();
+            return false;
         }
+
+        if (etLastName.getText().toString().trim().isEmpty()) {
+            etLastName.setError("Last name is required");
+            etLastName.requestFocus();
+            return false;
+        }
+
+        if (etEmail.getText().toString().trim().isEmpty()) {
+            etEmail.setError("Email is required");
+            etEmail.requestFocus();
+            return false;
+        }
+
+        if (etMobileNumber.getText().toString().trim().isEmpty()) {
+            etMobileNumber.setError("Mobile number is required");
+            etMobileNumber.requestFocus();
+            return false;
+        }
+
+        return true;
     }
 
-    private void handleRegistrationError(VolleyError error) {
-        Log.e(TAG, "Registration error", error);
-
-        String message = "Registration failed. Please try again.";
-
-        if (error.networkResponse != null) {
-            switch (error.networkResponse.statusCode) {
-                case 400:
-                    message = "Invalid data provided. Please check your inputs.";
-                    break;
-                case 409:
-                    message = "An account with this email already exists.";
-                    break;
-                case 500:
-                    message = "Server error. Please try again later.";
-                    break;
-            }
-        }
-
-        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
-    }
-
-    private String hashPassword(String password) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(password.getBytes());
-            StringBuilder hexString = new StringBuilder();
-
-            for (byte b : hash) {
-                String hex = Integer.toHexString(0xff & b);
-                if (hex.length() == 1) {
-                    hexString.append('0');
-                }
-                hexString.append(hex);
-            }
-
-            return hexString.toString();
-        } catch (NoSuchAlgorithmException e) {
-            Log.e(TAG, "Error hashing password", e);
-            return password; // Fallback, but not recommended for production
-        }
+    private void setFieldsEditable(boolean editable) {
+        etFirstName.setEnabled(editable);
+        etMiddleName.setEnabled(editable);
+        etLastName.setEnabled(editable);
+        etEmail.setEnabled(editable);
+        etMobileNumber.setEnabled(editable);
+        etAddress.setEnabled(editable);
+        etPincode.setEnabled(editable);
+        actvCity.setEnabled(editable);
+        actvState.setEnabled(editable);
     }
 
     private void showLoading(boolean show) {
-        progressBar.setVisibility(show ? View.VISIBLE : View.GONE);
-        btnRegister.setEnabled(!show);
+        // Implement progress bar visibility
+        // if (progressBar != null) {
+        //     progressBar.setVisibility(show ? View.VISIBLE : View.GONE);
+        // }
+        btnEdit.setEnabled(!show);
+        btnSave.setEnabled(!show);
+    }
+    private void loadDropdownData() {
+        // Load States (type = 1)
+        registrationRepository.getDropdownData("", 1, 100, 1, 0, (success, items, message) -> {
+            if (success && items != null) {
+                Log.d(TAG, "States loaded: " + items.size());
+                stateList = items;
 
-        // Disable form during loading
-        setFormEnabled(!show);
+                stateAdapter = new ArrayAdapter<>(this,
+                        android.R.layout.simple_dropdown_item_1line, stateList);
+                actvState.setAdapter(stateAdapter);
+
+                actvState.setOnItemClickListener((parent, view, position, id) -> {
+                    DropdownItem selectedState = (DropdownItem) parent.getItemAtPosition(position);
+                    currentCustomer.setStateId(selectedState.getId());
+                    loadCities(selectedState.getId());
+                });
+            } else {
+                Log.e(TAG, "Failed to load states: " + message);
+                Toast.makeText(this, "Failed to load states: " + message, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
-    private void setFormEnabled(boolean enabled) {
-        etFirstName.setEnabled(enabled);
-        etMiddleName.setEnabled(enabled);
-        etLastName.setEnabled(enabled);
-        etEmail.setEnabled(enabled);
-        etPhoneNumber.setEnabled(enabled);
-        etAddress.setEnabled(enabled);
-        actvState.setEnabled(enabled);
-        actvCity.setEnabled(enabled && selectedStateId != 0);
-        actvLocation.setEnabled(enabled && selectedCityId != 0);
-        etPassword.setEnabled(enabled);
-        etConfirmPassword.setEnabled(enabled);
-        cbTerms.setEnabled(enabled);
+    private void loadCities(int stateId) {
+        registrationRepository.getDropdownData("", 1, 100, 2, stateId, (success, items, message) -> {
+            if (success && items != null) {
+                Log.d(TAG, "Cities loaded: " + items.size());
+                cityList = items;
+
+                cityAdapter = new ArrayAdapter<>(this,
+                        android.R.layout.simple_dropdown_item_1line, cityList);
+                actvCity.setAdapter(cityAdapter);
+                actvCity.setEnabled(true); // Enable city dropdown
+
+                actvCity.setOnItemClickListener((parent, view, position, id) -> {
+                    DropdownItem selectedCity = (DropdownItem) parent.getItemAtPosition(position);
+                    currentCustomer.setCityId(selectedCity.getId());
+                });
+
+                // Set city if customer has one
+                if (currentCustomer != null && currentCustomer.getCityId() > 0) {
+                    for (DropdownItem item : cityList) {
+                        if (item.getId() == currentCustomer.getCityId()) {
+                            actvCity.setText(item.getText(), false);
+                            break;
+                        }
+                    }
+                }
+            } else {
+                Log.e(TAG, "Failed to load cities: " + message);
+                Toast.makeText(this, "Failed to load cities: " + message, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
-    // Data classes for dropdowns
-    private static class StateData {
-        private int id;
-        private String name;
-
-        public StateData(int id, String name) {
-            this.id = id;
-            this.name = name;
-        }
-
-        public int getId() { return id; }
-        public String getName() { return name; }
-
-        @Override
-        public String toString() { return name; }
-    }
-
-    private static class CityData {
-        private int id;
-        private String name;
-        private int stateId;
-
-        public CityData(int id, String name, int stateId) {
-            this.id = id;
-            this.name = name;
-            this.stateId = stateId;
-        }
-
-        public int getId() { return id; }
-        public String getName() { return name; }
-        public int getStateId() { return stateId; }
-
-        @Override
-        public String toString() { return name; }
-    }
-
-    private static class LocationData {
-        private int id;
-        private String name;
-        private int cityId;
-
-        public LocationData(int id, String name, int cityId) {
-            this.id = id;
-            this.name = name;
-            this.cityId = cityId;
-        }
-
-        public int getId() { return id; }
-        public String getName() { return name; }
-        public int getCityId() { return cityId; }
-
-        @Override
-        public String toString() { return name; }
-    }
-
-    @Override
-    public void onBackPressed() {
-        super.onBackPressed();
-    }
 }

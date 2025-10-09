@@ -23,8 +23,9 @@
     <!-- Primary Colors -->
     <color name="primary_color">#FF6B35</color>
     <color name="primary_dark">#E55A2B</color>
-    <color name="accent_color">#FFA726</color>
-
+    <color name="colorPrimary">#FFC107</color> <!-- Material Yellow -->
+    <color name="colorAccent">#FFC107</color>
+    <color name="accent_color">#FFC107</color>
     <!-- Background Colors -->
     <color name="onboarding_background">#FFFFFF</color>
 

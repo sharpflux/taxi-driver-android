@@ -33,17 +33,32 @@ public class AuthRepository {
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, APIs.LoginURL, params,
                 response -> {
                     try {
-                        // Parse user and token
+                        // ✅ Extract data
+                        String authToken = response.getString("authToken");
+                        String refreshToken = response.optString("refreshToken", "");
+                        String expiresIn = response.optString("expiresIn", "");
                         JSONObject user = response.getJSONObject("user");
-                        String token = response.getString("token");
 
-                        // Save token in SharedPreferences (optional)
+                        // ✅ Save all data into SharedPreferences
                         SharedPreferences prefs = context.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
-                        prefs.edit().putString("auth_token", token).apply();
+                        SharedPreferences.Editor editor = prefs.edit();
 
-                        // You can also save user info if needed
-                        prefs.edit().putString("user_name", user.getString("name")).apply();
-                        prefs.edit().putString("user_email", user.getString("email")).apply();
+                        // Token data
+                        editor.putString("authToken", authToken);
+                        editor.putString("refreshToken", refreshToken);
+                        editor.putString("expiresIn", expiresIn);
+
+                        // User data
+                        editor.putInt("user_id", user.getInt("id"));
+                        editor.putString("user_name", user.getString("name"));
+                        editor.putString("user_email", user.getString("email"));
+                        editor.putBoolean("isActive", user.getBoolean("isActive"));
+                        editor.putInt("roleId", user.optInt("roleId", -1));
+                        editor.putInt("locationId", user.optInt("locationId", -1));
+                        editor.putString("roleName", user.optString("roleName", ""));
+                        editor.putString("companyLogoURL", user.optString("companyLogoURL", ""));
+
+                        editor.apply();
 
                         callback.onResult(true, "Login successful");
                     } catch (JSONException e) {
@@ -56,6 +71,14 @@ public class AuthRepository {
 
         queue.add(request);
     }
+
+//    SharedPreferences prefs = getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
+//
+//    String authToken = prefs.getString("authToken", "");
+//    String userName = prefs.getString("user_name", "");
+//    String userEmail = prefs.getString("user_email", "");
+//    String companyLogoURL = prefs.getString("companyLogoURL", "");
+//    int roleId = prefs.getInt("roleId", -1);
 
     public interface AuthCallback {
         void onResult(boolean success, String message);

@@ -45,6 +45,22 @@
             android:name=".ui.activities.HomeActivity"
             android:exported="false"
             android:theme="@style/Theme.TaxiApp.NoActionBar" />
+        <activity
+            android:name=".ui.activities.RegistrationActivity"
+            android:exported="false"
+            android:theme="@style/Theme.TaxiApp.NoActionBar" />
+        <activity
+            android:name=".ui.activities.SignUpActivity"
+            android:exported="false"
+            android:theme="@style/Theme.TaxiApp.NoActionBar" />
+        <activity
+            android:name=".ui.activities.ProfileActivity"
+            android:exported="false"
+            android:theme="@style/Theme.TaxiApp.NoActionBar" />
+        <activity
+            android:name=".ui.activities.BillActivity"
+            android:exported="false"
+            android:theme="@style/Theme.TaxiApp.NoActionBar" />
 
         <activity
             android:name=".ui.activities.ScannerActivity"
