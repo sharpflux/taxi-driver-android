@@ -1,0 +1,767 @@
+package com.sharpflux.taxiapp.ui.activities;
+
+import android.app.DatePickerDialog;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.ImageDecoder;
+import android.net.Uri;
+import android.os.Build;
+import android.os.Bundle;
+import android.provider.MediaStore;
+import android.util.Base64;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewTreeObserver;
+import android.view.WindowManager;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
+import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.EditText;
+import android.widget.Filter;
+import android.widget.Filterable;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.RadioGroup;
+import android.widget.ScrollView;
+import android.widget.TextView;
+import android.widget.Toast;
+import android.widget.ViewFlipper;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.widget.NestedScrollView;
+
+import com.sharpflux.taxiapp.R;
+import com.sharpflux.taxiapp.data.model.DocumentType;
+import com.sharpflux.taxiapp.data.model.Driver;
+import com.sharpflux.taxiapp.data.model.DropdownItem;
+import com.sharpflux.taxiapp.data.repository.DriverRepository;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+
+public class DriverRegistrationActivity extends AppCompatActivity {
+
+    private static final String TAG = "DriverRegistration";
+
+    private ViewFlipper viewFlipper;
+    private DriverRepository repository;
+    private Driver driver;
+    private ImageView ivBackButton;
+
+    // Step 1 - Personal Information
+    private EditText etFirstName, etMiddleName, etLastName, etEmailId, etPhoneNumber, etAadhar, etPassword;
+    private RadioGroup rgGender;
+    private Button btnNext1;
+
+    // Step 2 - Address Information
+    private EditText etAddress;
+    private AutoCompleteTextView actvState, actvCity;
+    private Button btnBack2, btnNext2;
+    private List<DropdownItem> stateList = new ArrayList<>();
+    private List<DropdownItem> cityList = new ArrayList<>();
+    private ArrayAdapter<DropdownItem> stateAdapter;
+    private ArrayAdapter<DropdownItem> cityAdapter;
+
+    // Step 3 - Vehicle Information
+    private EditText etVehicleNumber;
+    private AutoCompleteTextView actvVehicleType;
+    private EditText etDlValidTo, etInsuranceValidTo;
+    private Button btnBack3, btnNext3;
+    private List<DropdownItem> vehicleTypeList = new ArrayList<>();
+    private ArrayAdapter<DropdownItem> vehicleTypeAdapter;
+
+    // Step 4 - Dynamic Documents & Language
+    private AutoCompleteTextView actvLanguage;
+    private List<DropdownItem> languageList = new ArrayList<>();
+    private ArrayAdapter<DropdownItem> languageAdapter;
+    private CheckBox cbSpeak, cbUnderstand, cbTerms;
+    private Button btnBack4, btnRegister;
+
+    // Dynamic document containers
+    private LinearLayout documentsContainer;
+    private List<DocumentType> documentTypes = new ArrayList<>();
+    private Map<Integer, Uri> documentUriMap = new HashMap<>();
+    private Map<Integer, ImageView> documentImageViewMap = new HashMap<>();
+    private int currentDocumentTypeId = 0;
+
+    private ActivityResultLauncher<Intent> imagePickerLauncher;
+    private View rootView;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_driver_registration);
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+        rootView = findViewById(android.R.id.content);
+
+        repository = new DriverRepository(this);
+        driver = new Driver();
+        setupKeyboardDetection();
+
+        // Default values
+        driver.setUserId(1);
+        driver.setIsActive(true);
+        driver.setRoleId(2); // Driver role
+        driver.setVerificationStatus(0); // Pending
+        driver.setVerified(false);
+        driver.setVerifiedBy(0);
+        driver.setLocationId(0);
+
+        initializeViews();
+        setupImagePicker();
+        setupListeners();
+        loadDropdownData();
+        loadDocumentTypes();
+
+        // Dynamic checkbox update on language select
+        actvLanguage.setOnItemClickListener((parent, view, position, id) -> {
+            String selectedLanguage = ((DropdownItem) parent.getItemAtPosition(position)).getText();
+            cbSpeak.setText("I can speak " + selectedLanguage);
+            cbUnderstand.setText("I can understand " + selectedLanguage);
+        });
+    }
+
+    private void setupKeyboardDetection() {
+        rootView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            private int previousHeight = 0;
+
+            @Override
+            public void onGlobalLayout() {
+                int heightDiff = rootView.getRootView().getHeight() - rootView.getHeight();
+                if (heightDiff > 200) {
+                    onKeyboardVisible();
+                } else if (previousHeight > 200 && heightDiff <= 200) {
+                    onKeyboardHidden();
+                }
+                previousHeight = heightDiff;
+            }
+        });
+    }
+
+    private void onKeyboardVisible() {
+        View focusedView = getCurrentFocus();
+        if (focusedView != null) {
+            focusedView.postDelayed(() -> scrollToView(focusedView), 100);
+        }
+    }
+
+    private void onKeyboardHidden() {
+        // Optional: Handle keyboard hidden event
+    }
+
+    private void scrollToView(final View view) {
+        View currentView = viewFlipper.getChildAt(viewFlipper.getDisplayedChild());
+        if (currentView instanceof NestedScrollView) {
+            scrollNestedScrollView((NestedScrollView) currentView, view);
+        } else {
+            ScrollView scrollView = findScrollViewInView(currentView);
+            if (scrollView != null) {
+                scrollScrollView(scrollView, view);
+            }
+        }
+    }
+
+    private ScrollView findScrollViewInView(View view) {
+        if (view instanceof ScrollView) {
+            return (ScrollView) view;
+        }
+        if (view instanceof android.view.ViewGroup) {
+            android.view.ViewGroup group = (android.view.ViewGroup) view;
+            for (int i = 0; i < group.getChildCount(); i++) {
+                ScrollView found = findScrollViewInView(group.getChildAt(i));
+                if (found != null) {
+                    return found;
+                }
+            }
+        }
+        return null;
+    }
+
+    private void scrollNestedScrollView(final NestedScrollView nestedScrollView, final View targetView) {
+        nestedScrollView.post(() -> {
+            int[] location = new int[2];
+            targetView.getLocationOnScreen(location);
+            int[] scrollLocation = new int[2];
+            nestedScrollView.getLocationOnScreen(scrollLocation);
+            int scrollY = location[1] - scrollLocation[1];
+            int offset = 100;
+            nestedScrollView.smoothScrollTo(0, scrollY - offset);
+        });
+    }
+
+    private void scrollScrollView(final ScrollView scrollView, final View targetView) {
+        scrollView.post(() -> {
+            int[] location = new int[2];
+            targetView.getLocationOnScreen(location);
+            int[] scrollLocation = new int[2];
+            scrollView.getLocationOnScreen(scrollLocation);
+            int scrollY = location[1] - scrollLocation[1];
+            int offset = 100;
+            scrollView.smoothScrollTo(0, scrollY - offset);
+        });
+    }
+
+    private void initializeViews() {
+        viewFlipper = findViewById(R.id.viewFlipper);
+        ivBackButton = findViewById(R.id.ivBackButton);
+
+        // Step 1
+        etFirstName = findViewById(R.id.etFirstName);
+        etMiddleName = findViewById(R.id.etMiddleName);
+        etLastName = findViewById(R.id.etLastName);
+        etEmailId = findViewById(R.id.etEmailId);
+        etPhoneNumber = findViewById(R.id.etPhoneNumber);
+        etAadhar = findViewById(R.id.etAadhar);
+        etPassword = findViewById(R.id.etPassword);
+        rgGender = findViewById(R.id.rgGender);
+        btnNext1 = findViewById(R.id.btnNext1);
+
+        // Step 2
+        etAddress = findViewById(R.id.etAddress);
+        actvState = findViewById(R.id.actvState);
+        actvCity = findViewById(R.id.actvCity);
+        btnBack2 = findViewById(R.id.btnBack2);
+        btnNext2 = findViewById(R.id.btnNext2);
+
+        // Step 3
+        etVehicleNumber = findViewById(R.id.etVehicleNumber);
+        actvVehicleType = findViewById(R.id.actvVehicleType);
+        etDlValidTo = findViewById(R.id.etDlValidTo);
+        etInsuranceValidTo = findViewById(R.id.etInsuranceValidTo);
+        btnBack3 = findViewById(R.id.btnBack3);
+        btnNext3 = findViewById(R.id.btnNext3);
+
+        // Step 4
+        documentsContainer = findViewById(R.id.documentsContainer);
+        actvLanguage = findViewById(R.id.actvLanguage);
+        cbSpeak = findViewById(R.id.etSpeak);
+        cbUnderstand = findViewById(R.id.etUnderstand);
+        cbTerms = findViewById(R.id.etTermsConditions);
+        btnBack4 = findViewById(R.id.btnBack4);
+        btnRegister = findViewById(R.id.btnRegister);
+    }
+
+    private void setupImagePicker() {
+        imagePickerLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                        Uri selectedImage = result.getData().getData();
+                        if (selectedImage != null && currentDocumentTypeId != 0) {
+                            documentUriMap.put(currentDocumentTypeId, selectedImage);
+
+                            ImageView imageView = documentImageViewMap.get(currentDocumentTypeId);
+                            if (imageView != null) {
+                                imageView.setImageURI(selectedImage);
+                                imageView.setVisibility(View.VISIBLE);
+
+                                // Hide placeholder
+                                View parent = (View) imageView.getParent();
+                                LinearLayout llPlaceholder = parent.findViewById(R.id.llPlaceholder);
+                                if (llPlaceholder != null) llPlaceholder.setVisibility(View.GONE);
+                            }
+
+                            // Convert to Base64 and store
+                            String base64Image = convertUriToBase64(selectedImage);
+                            if (base64Image != null && !base64Image.isEmpty()) {
+                                if (driver.getDocumentBase64Map() == null) {
+                                    driver.setDocumentBase64Map(new HashMap<>());
+                                }
+                                driver.getDocumentBase64Map().put(currentDocumentTypeId, base64Image);
+                                Log.d(TAG, "✅ Image stored for docId=" + currentDocumentTypeId +
+                                        ", size=" + (base64Image.length() / 1024) + " KB");
+                            } else {
+                                Toast.makeText(this, "Failed to process image", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    }
+                }
+        );
+    }
+
+    private void setupListeners() {
+        ivBackButton.setOnClickListener(v -> handleBackPress());
+
+        btnNext1.setOnClickListener(v -> {
+            if (validateStep1()) {
+                saveStep1Data();
+                viewFlipper.showNext();
+            }
+        });
+
+        btnBack2.setOnClickListener(v -> viewFlipper.showPrevious());
+
+        btnNext2.setOnClickListener(v -> {
+            if (validateStep2()) {
+                saveStep2Data();
+                viewFlipper.showNext();
+            }
+        });
+
+        btnBack3.setOnClickListener(v -> viewFlipper.showPrevious());
+
+        btnNext3.setOnClickListener(v -> {
+            if (validateStep3()) {
+                saveStep3Data();
+                viewFlipper.showNext();
+            }
+        });
+
+        btnBack4.setOnClickListener(v -> viewFlipper.showPrevious());
+        btnRegister.setOnClickListener(v -> registerDriver());
+
+        etDlValidTo.setOnClickListener(v -> showDatePicker(etDlValidTo));
+        etInsuranceValidTo.setOnClickListener(v -> showDatePicker(etInsuranceValidTo));
+
+        actvState.setOnItemClickListener((parent, view, position, id) -> {
+            DropdownItem selectedState = (DropdownItem) parent.getItemAtPosition(position);
+            Log.d(TAG, "State selected: " + selectedState.getText());
+            actvCity.setText("");
+            cityList.clear();
+            loadCities(selectedState.getId());
+        });
+    }
+
+    private void handleBackPress() {
+        int currentStep = viewFlipper.getDisplayedChild();
+        if (currentStep == 0) {
+            finish();
+        } else {
+            viewFlipper.showPrevious();
+        }
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        handleBackPress();
+    }
+
+    private class SearchableDropdownAdapter extends ArrayAdapter<DropdownItem> implements Filterable {
+        private final List<DropdownItem> allItems;
+        private final List<DropdownItem> filteredItems;
+
+        public SearchableDropdownAdapter(List<DropdownItem> items) {
+            super(DriverRegistrationActivity.this, android.R.layout.simple_dropdown_item_1line, new ArrayList<>(items));
+            this.allItems = new ArrayList<>(items);
+            this.filteredItems = new ArrayList<>(items);
+        }
+
+        @NonNull
+        @Override
+        public Filter getFilter() {
+            return new Filter() {
+                @Override
+                protected FilterResults performFiltering(CharSequence constraint) {
+                    FilterResults results = new FilterResults();
+                    filteredItems.clear();
+                    if (constraint == null || constraint.length() == 0) {
+                        filteredItems.addAll(allItems);
+                    } else {
+                        String filterPattern = constraint.toString().toLowerCase().trim();
+                        for (DropdownItem item : allItems) {
+                            if (item.getText().toLowerCase().contains(filterPattern)) {
+                                filteredItems.add(item);
+                            }
+                        }
+                    }
+                    results.values = filteredItems;
+                    results.count = filteredItems.size();
+                    return results;
+                }
+
+                @Override
+                protected void publishResults(CharSequence constraint, FilterResults results) {
+                    clear();
+                    if (results != null && results.values != null) {
+                        addAll((List<DropdownItem>) results.values);
+                    }
+                    notifyDataSetChanged();
+                }
+
+                @Override
+                public CharSequence convertResultToString(Object resultValue) {
+                    return ((DropdownItem) resultValue).getText();
+                }
+            };
+        }
+    }
+
+    private void loadDropdownData() {
+        // States
+        repository.getDropdownData("", 1, 100, 1, 0, (success, items, message) -> {
+            if (success && items != null) {
+                stateList = items;
+                stateAdapter = new SearchableDropdownAdapter(stateList);
+                actvState.setAdapter(stateAdapter);
+                actvState.setThreshold(1);
+                actvState.setOnClickListener(v -> actvState.showDropDown());
+            }
+        });
+
+        // Vehicle types
+        repository.getDropdownData("", 1, 100, 4, 0, (success, items, message) -> {
+            if (success && items != null) {
+                vehicleTypeList = items;
+                vehicleTypeAdapter = new SearchableDropdownAdapter(vehicleTypeList);
+                actvVehicleType.setAdapter(vehicleTypeAdapter);
+                actvVehicleType.setThreshold(1);
+                actvVehicleType.setOnClickListener(v -> actvVehicleType.showDropDown());
+            }
+        });
+
+        // Language Dropdown
+        repository.getDropdownData("", 1, 100, 5, 0, (success, items, message) -> {
+            if (success && items != null) {
+                languageList = items;
+                languageAdapter = new SearchableDropdownAdapter(languageList);
+                actvLanguage.setAdapter(languageAdapter);
+                actvLanguage.setThreshold(1);
+                actvLanguage.setOnClickListener(v -> actvLanguage.showDropDown());
+            } else {
+                Log.e(TAG, "Language dropdown failed: " + message);
+            }
+        });
+    }
+
+    private void loadDocumentTypes() {
+        repository.getDocumentTypes((success, types, message) -> {
+            if (success && types != null && !types.isEmpty()) {
+                documentTypes.clear();
+                documentTypes.addAll(types);
+                createDynamicDocumentUI();
+            } else {
+                Toast.makeText(this, "Failed to load document types: " + message, Toast.LENGTH_SHORT).show();
+                Log.e(TAG, "Document fetch failed: " + message);
+            }
+        });
+    }
+
+    private void createDynamicDocumentUI() {
+        documentsContainer.removeAllViews();
+        documentUriMap.clear();
+        documentImageViewMap.clear();
+
+        LayoutInflater inflater = LayoutInflater.from(this);
+
+        for (DocumentType docType : documentTypes) {
+            View documentCard = inflater.inflate(R.layout.item_document_upload, documentsContainer, false);
+
+            TextView tvDocumentName = documentCard.findViewById(R.id.tvDocumentName);
+            ImageView ivDocument = documentCard.findViewById(R.id.ivDocument);
+            LinearLayout llPlaceholder = documentCard.findViewById(R.id.llPlaceholder);
+            Button btnUpload = documentCard.findViewById(R.id.btnUploadDocument);
+
+            tvDocumentName.setText(docType.getDocumentName() + " *");
+            documentImageViewMap.put(docType.getDocumentTypeId(), ivDocument);
+
+            btnUpload.setOnClickListener(v -> {
+                currentDocumentTypeId = docType.getDocumentTypeId();
+                openImagePicker(docType.getDocumentTypeId());
+            });
+
+            ivDocument.setVisibility(View.GONE);
+            llPlaceholder.setVisibility(View.VISIBLE);
+
+            documentsContainer.addView(documentCard);
+        }
+    }
+
+    private void loadCities(int stateId) {
+        repository.getDropdownData("", 1, 100, 2, stateId, (success, items, message) -> {
+            if (success && items != null) {
+                cityList = items;
+                cityAdapter = new SearchableDropdownAdapter(cityList);
+                actvCity.setAdapter(cityAdapter);
+                actvCity.setEnabled(true);
+                actvCity.setThreshold(1);
+                actvCity.setOnClickListener(v -> actvCity.showDropDown());
+            }
+        });
+    }
+
+    private boolean validateStep1() {
+        if (etFirstName.getText().toString().trim().isEmpty()) {
+            etFirstName.setError("First name is required");
+            etFirstName.requestFocus();
+            return false;
+        }
+        if (etLastName.getText().toString().trim().isEmpty()) {
+            etLastName.setError("Last name is required");
+            etLastName.requestFocus();
+            return false;
+        }
+        String email = etEmailId.getText().toString().trim();
+        if (email.isEmpty() || !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            etEmailId.setError("Valid email is required");
+            etEmailId.requestFocus();
+            return false;
+        }
+        if (etPhoneNumber.getText().toString().trim().length() < 10) {
+            etPhoneNumber.setError("Valid 10-digit phone number required");
+            etPhoneNumber.requestFocus();
+            return false;
+        }
+        if (etAadhar.getText().toString().trim().length() != 12) {
+            etAadhar.setError("Valid 12-digit Aadhar required");
+            etAadhar.requestFocus();
+            return false;
+        }
+        if (etPassword.getText().toString().trim().length() < 6) {
+            etPassword.setError("Password must be at least 6 characters");
+            etPassword.requestFocus();
+            return false;
+        }
+        if (rgGender.getCheckedRadioButtonId() == -1) {
+            Toast.makeText(this, "Please select gender", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        return true;
+    }
+
+    private boolean validateStep2() {
+        if (etAddress.getText().toString().trim().isEmpty()) {
+            etAddress.setError("Address is required");
+            etAddress.requestFocus();
+            return false;
+        }
+        if (actvState.getText().toString().trim().isEmpty()) {
+            actvState.setError("State is required");
+            actvState.requestFocus();
+            return false;
+        }
+        if (actvCity.getText().toString().trim().isEmpty()) {
+            actvCity.setError("City is required");
+            actvCity.requestFocus();
+            return false;
+        }
+        return true;
+    }
+
+    private boolean validateStep3() {
+        if (etVehicleNumber.getText().toString().trim().isEmpty()) {
+            etVehicleNumber.setError("Vehicle number required");
+            etVehicleNumber.requestFocus();
+            return false;
+        }
+        if (actvVehicleType.getText().toString().trim().isEmpty()) {
+            actvVehicleType.setError("Vehicle type required");
+            actvVehicleType.requestFocus();
+            return false;
+        }
+        if (etDlValidTo.getText().toString().trim().isEmpty()) {
+            etDlValidTo.setError("Driving License valid date required");
+            etDlValidTo.requestFocus();
+            return false;
+        }
+        if (etInsuranceValidTo.getText().toString().trim().isEmpty()) {
+            etInsuranceValidTo.setError("Insurance valid date required");
+            etInsuranceValidTo.requestFocus();
+            return false;
+        }
+        return true;
+    }
+
+    private void saveStep1Data() {
+        driver.setFirstName(etFirstName.getText().toString().trim());
+        driver.setMiddleName(etMiddleName.getText().toString().trim());
+        driver.setLastName(etLastName.getText().toString().trim());
+        driver.setEmailId(etEmailId.getText().toString().trim());
+        driver.setPhoneNumber(etPhoneNumber.getText().toString().trim());
+        driver.setAadharNumber(etAadhar.getText().toString().trim());
+        driver.setPassword(etPassword.getText().toString().trim());
+        driver.setGenderId((rgGender.getCheckedRadioButtonId() == R.id.rbMale) ? 1 : 2);
+
+        Log.d(TAG, "Step 1 saved: " + driver.getFirstName() + " " + driver.getLastName());
+    }
+
+    private void saveStep2Data() {
+        driver.setAddress(etAddress.getText().toString().trim());
+
+        String stateText = actvState.getText().toString();
+        for (DropdownItem item : stateList) {
+            if (item.getText().equals(stateText)) {
+                driver.setStateId(item.getId());
+                break;
+            }
+        }
+
+        String cityText = actvCity.getText().toString();
+        for (DropdownItem item : cityList) {
+            if (item.getText().equals(cityText)) {
+                driver.setCityId(item.getId());
+                break;
+            }
+        }
+
+        Log.d(TAG, "Step 2 saved: StateId=" + driver.getStateId() + ", CityId=" + driver.getCityId());
+    }
+
+    private void saveStep3Data() {
+        driver.setVehicleNumber(etVehicleNumber.getText().toString().trim().toUpperCase());
+        driver.setDrivingLicenseValidTo(etDlValidTo.getText().toString().trim());
+        driver.setInsuranceValidTo(etInsuranceValidTo.getText().toString().trim());
+
+        String vehicleTypeText = actvVehicleType.getText().toString();
+        for (DropdownItem item : vehicleTypeList) {
+            if (item.getText().equals(vehicleTypeText)) {
+                driver.setVehicleTypeId(item.getId());
+                break;
+            }
+        }
+
+        Log.d(TAG, "Step 3 saved: Vehicle=" + driver.getVehicleNumber() +
+                ", TypeId=" + driver.getVehicleTypeId());
+    }
+
+    private void saveStep4Data() {
+        String languageText = actvLanguage.getText().toString().trim();
+        for (DropdownItem item : languageList) {
+            if (item.getText().equals(languageText)) {
+                driver.setLanguageId(item.getId());
+                break;
+            }
+        }
+
+        driver.setSpeak(cbSpeak.isChecked());
+        driver.setUnderstand(cbUnderstand.isChecked());
+        driver.setTermsConditions(cbTerms.isChecked());
+
+        Log.d(TAG, "Step 4 saved: LanguageId=" + driver.getLanguageId() +
+                ", Speak=" + driver.isSpeak() + ", Understand=" + driver.isUnderstand());
+    }
+
+    private void openImagePicker(int documentTypeId) {
+        currentDocumentTypeId = documentTypeId;
+        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        imagePickerLauncher.launch(intent);
+    }
+
+    private void showDatePicker(EditText targetEditText) {
+        Calendar calendar = Calendar.getInstance();
+        DatePickerDialog datePickerDialog = new DatePickerDialog(
+                this,
+                (view, year, month, dayOfMonth) -> {
+                    calendar.set(year, month, dayOfMonth);
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                    targetEditText.setText(sdf.format(calendar.getTime()));
+                },
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH)
+        );
+        datePickerDialog.getDatePicker().setMinDate(System.currentTimeMillis());
+        datePickerDialog.show();
+    }
+
+    private void registerDriver() {
+        saveStep4Data();
+
+        // Validate language selection
+        if (actvLanguage.getText().toString().trim().isEmpty()) {
+            actvLanguage.setError("Language is required");
+            actvLanguage.requestFocus();
+            return;
+        }
+
+        // Validate all required documents are uploaded
+        for (DocumentType docType : documentTypes) {
+            if (docType.isActive() && !documentUriMap.containsKey(docType.getDocumentTypeId())) {
+                Toast.makeText(this, "Please upload " + docType.getDocumentName(), Toast.LENGTH_LONG).show();
+                return;
+            }
+        }
+
+        if (!cbTerms.isChecked()) {
+            Toast.makeText(this, "Please agree to Terms and Conditions", Toast.LENGTH_SHORT).show();
+            cbTerms.requestFocus();
+            return;
+        }
+
+        // Final validation
+        Map<Integer, String> base64Map = driver.getDocumentBase64Map();
+        if (base64Map == null || base64Map.isEmpty()) {
+            Toast.makeText(this, "Please upload all required documents", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        // Disable button to prevent double submission
+        btnRegister.setEnabled(false);
+        btnRegister.setText("Registering...");
+
+        Log.d(TAG, "=== STARTING REGISTRATION ===");
+        Log.d(TAG, "Driver: " + driver.getFirstName() + " " + driver.getLastName());
+        Log.d(TAG, "Documents count: " + base64Map.size());
+
+        repository.registerDriver(driver, (success, message) -> {
+            runOnUiThread(() -> {
+                btnRegister.setEnabled(true);
+                btnRegister.setText("Register as Driver");
+
+                if (success) {
+                    Toast.makeText(this, "✅ Registration successful!", Toast.LENGTH_LONG).show();
+                    Log.d(TAG, "✅ Registration completed successfully");
+                    finish();
+                } else {
+                    Toast.makeText(this, "❌ " + message, Toast.LENGTH_LONG).show();
+                    Log.e(TAG, "❌ Registration failed: " + message);
+                }
+            });
+        });
+    }
+
+    private String convertUriToBase64(Uri uri) {
+        try {
+            Bitmap bitmap;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                bitmap = ImageDecoder.decodeBitmap(ImageDecoder.createSource(getContentResolver(), uri));
+            } else {
+                bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), uri);
+            }
+
+            // Resize image to max 800px
+            int maxSize = 800;
+            int width = bitmap.getWidth();
+            int height = bitmap.getHeight();
+
+            if (width > maxSize || height > maxSize) {
+                float ratio = Math.min((float) maxSize / width, (float) maxSize / height);
+                int newWidth = Math.round(width * ratio);
+                int newHeight = Math.round(height * ratio);
+                Bitmap resized = Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true);
+                bitmap.recycle();
+                bitmap = resized;
+                Log.d(TAG, "Image resized to: " + newWidth + "x" + newHeight);
+            }
+
+            // Compress to JPEG with 70% quality
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 70, baos);
+            byte[] imageBytes = baos.toByteArray();
+            bitmap.recycle();
+
+            // Use NO_WRAP to avoid newlines
+            String base64 = Base64.encodeToString(imageBytes, Base64.NO_WRAP);
+
+            Log.d(TAG, "Base64 created - Size: " + (base64.length() / 1024) + " KB");
+            return base64;
+
+        } catch (IOException e) {
+            Log.e(TAG, "Error converting image to Base64", e);
+            return null;
+        }
+    }
+
+}

@@ -1,7 +1,7 @@
 package com.sharpflux.taxiapp.data.model;
 
 public class Registration {
-    private int customersId;
+    private int driverId;
     private int locationId;
     private String firstName;
     private String middleName;
@@ -23,10 +23,10 @@ public class Registration {
     }
 
     // Constructor with all fields
-    public Registration(int customersId, int locationId, String firstName, String middleName,
+    public Registration(int driverId, int locationId, String firstName, String middleName,
                 String lastName, String emailId, String phoneNumber, String passwordHash,
                 String address, int cityId, int stateId, int roleId, boolean isActive, int userId) {
-        this.customersId = customersId;
+        this.driverId = driverId;
         this.locationId = locationId;
         this.firstName = firstName;
         this.middleName = middleName;
@@ -44,7 +44,7 @@ public class Registration {
 
     // Getters
     public int getCustomersId() {
-        return customersId;
+        return driverId;
     }
 
     public int getLocationId() {
@@ -100,8 +100,8 @@ public class Registration {
     }
 
     // Setters
-    public void setCustomersId(int customersId) {
-        this.customersId = customersId;
+    public void setCustomersId(int driverId) {
+        this.driverId = driverId;
     }
 
     public void setLocationId(int locationId) {
@@ -159,7 +159,7 @@ public class Registration {
     @Override
     public String toString() {
         return "User{" +
-                "customersId=" + customersId +
+                "driverId=" + driverId +
                 ", locationId=" + locationId +
                 ", firstName='" + firstName + '\'' +
                 ", middleName='" + middleName + '\'' +

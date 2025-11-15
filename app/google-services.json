@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "166943762705",
+    "firebase_url": "https://city6to9-2b21d.firebaseio.com",
+    "project_id": "city6to9-2b21d",
+    "storage_bucket": "city6to9-2b21d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:166943762705:android:9798fea71449c0e86044b0",
+        "android_client_info": {
+          "package_name": "com.sharpflux.taxiapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDAleF7H-ElDNPACVzIb1T74rOx_mx_Pbo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

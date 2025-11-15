@@ -4,6 +4,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowInsets;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
@@ -16,10 +17,12 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.sharpflux.taxiapp.R;
 import com.sharpflux.taxiapp.data.model.Customer;
+import com.sharpflux.taxiapp.data.model.Driver;
 import com.sharpflux.taxiapp.data.model.DropdownItem;
 import com.sharpflux.taxiapp.data.model.Registration;
 import com.sharpflux.taxiapp.data.repository.CustomerRepository;
 import com.sharpflux.taxiapp.data.repository.RegistrationRepository;
+import com.sharpflux.taxiapp.data.repository.DriverRepository;
 
 import org.json.JSONObject;
 
@@ -29,7 +32,7 @@ import java.util.List;
 public class RegistrationActivity extends AppCompatActivity {
     private static final String TAG = "RegistrationActivity";
 
-    private EditText etFirstName, etMiddleName, etLastName, etEmail, etMobileNumber, etAddress, etPincode;
+    private EditText etFirstName, etMiddleName, etLastName, etEmail, etMobileNumber, etAddress;
     private AutoCompleteTextView actvCity, actvState;
     private ImageButton btnBackArrow;
     private Button btnEdit, btnSave;
@@ -39,33 +42,48 @@ public class RegistrationActivity extends AppCompatActivity {
     private ArrayAdapter<DropdownItem> stateAdapter;
     private ArrayAdapter<DropdownItem> cityAdapter;
     private boolean isEditing = false;
-    private CustomerRepository customerRepository;
+    private DriverRepository driverRepository;
     private RegistrationRepository registrationRepository;
-    private Customer currentCustomer;
-    private int customerId = 0; // You can pass this from previous activity via Intent
+    private Driver currentDriver;
+    private int driverId = 0; // You can pass this from previous activity via Intent
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_registration);
 
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+            getWindow().getDecorView().setOnApplyWindowInsetsListener((v, insets) -> {
+                int topInset = insets.getInsets(WindowInsets.Type.statusBars()).top;
+                v.setPadding(0, topInset, 0, 0);
+                return insets;
+            });
+        } else {
+            getWindow().getDecorView().setOnApplyWindowInsetsListener((v, insets) -> {
+                int topInset = insets.getSystemWindowInsetTop();
+                v.setPadding(0, topInset, 0, 0);
+                return insets.consumeSystemWindowInsets();
+            });
+        }
         initializeViews();
         initializeRepositories();
         setupListeners();
         loadDropdownData();
+        loadDriverData();
 
-        // Get customer ID from intent if passed
-        if (getIntent().hasExtra("CUSTOMER_ID")) {
-            customerId = getIntent().getIntExtra("CUSTOMER_ID", 0);
-        }
-
-        // Load customer data
-        if (customerId > 0) {
-            loadCustomerData(customerId);
-        } else {
-            // Load first customer for demo (or keep fields empty for new registration)
-            loadCustomerData(1); // Change this based on your requirement
-        }
+//        // Get Driver ID from intent
+//        if (getIntent().hasExtra("DRIVER_ID")) {
+//            driverId = getIntent().getIntExtra("DRIVER_ID", 0);
+//        }
+//
+//        // Load driver data
+//        if (driverId > 0) {
+//            loadDriverData();
+//        } else {
+//
+//            loadDriverData();
+//        }
     }
 
     private void initializeViews() {
@@ -75,7 +93,7 @@ public class RegistrationActivity extends AppCompatActivity {
         etEmail = findViewById(R.id.etEmail);
         etMobileNumber = findViewById(R.id.etMobileNumber);
         etAddress = findViewById(R.id.etAddress);
-        etPincode = findViewById(R.id.etPincode);
+        //etPincode = findViewById(R.id.etPincode);
         actvCity = findViewById(R.id.actvCity);
         actvState = findViewById(R.id.actvState);
 
@@ -88,7 +106,7 @@ public class RegistrationActivity extends AppCompatActivity {
     }
 
     private void initializeRepositories() {
-        customerRepository = new CustomerRepository(this);
+        driverRepository = new DriverRepository(this);
         registrationRepository = new RegistrationRepository(this);
     }
 
@@ -98,21 +116,21 @@ public class RegistrationActivity extends AppCompatActivity {
         btnSave.setOnClickListener(v -> saveProfile());
     }
 
-    private void loadCustomerData(int startIndex) {
+    private void loadDriverData() {
         showLoading(true);
         SharedPreferences prefs = getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
-        int customersId = prefs.getInt("user_id", 0);
-        customerRepository.getCustomers(startIndex, 10, "0", "0",customersId,
-                new CustomerRepository.CustomerCallback() {
+        int driversId = prefs.getInt("user_id", 0);
+        driverRepository.getDrivers(driversId,
+                new DriverRepository.DriverCallback() {
                     @Override
-                    public void onSuccess(List<Customer> customers) {
+                    public void onSuccess(List<Driver> drivers) {
                         showLoading(false);
-                        if (customers != null && !customers.isEmpty()) {
-                            currentCustomer = customers.get(0);
-                            bindCustomerData(currentCustomer);
+                        if (drivers != null && !drivers.isEmpty()) {
+                            currentDriver = drivers.get(0);
+                            bindDriverData(currentDriver);
                         } else {
                             Toast.makeText(RegistrationActivity.this,
-                                    "No customer data found", Toast.LENGTH_SHORT).show();
+                                    "No driver data found", Toast.LENGTH_SHORT).show();
                         }
                     }
 
@@ -126,31 +144,30 @@ public class RegistrationActivity extends AppCompatActivity {
 
     }
 
-    private void bindCustomerData(Customer customer) {
-        if (customer == null) return;
+    private void bindDriverData(Driver driver) {
+        if (driver == null) return;
 
-        etFirstName.setText(customer.getFirstName() != null ? customer.getFirstName() : "");
-        etMiddleName.setText(customer.getMiddleName() != null ? customer.getMiddleName() : "");
-        etLastName.setText(customer.getLastName() != null ? customer.getLastName() : "");
-        etEmail.setText(customer.getEmailId() != null ? customer.getEmailId() : "");
-        etMobileNumber.setText(customer.getPhoneNumber() != null ? customer.getPhoneNumber() : "");
-        etAddress.setText(customer.getAddress() != null ? customer.getAddress() : "");
-        etPincode.setText(customer.getPincode() != null ? customer.getPincode() : "");
+        etFirstName.setText(driver.getFirstName() != null ? driver.getFirstName() : "");
+        etMiddleName.setText(driver.getMiddleName() != null ? driver.getMiddleName() : "");
+        etLastName.setText(driver.getLastName() != null ? driver.getLastName() : "");
+        etEmail.setText(driver.getEmailId() != null ? driver.getEmailId() : "");
+        etMobileNumber.setText(driver.getPhoneNumber() != null ? driver.getPhoneNumber() : "");
+        etAddress.setText(driver.getAddress() != null ? driver.getAddress() : "");
 
         // Set state and city after dropdowns are loaded
-        if (customer.getStateId() > 0) {
+        if (driver.getStateId() > 0) {
             for (DropdownItem item : stateList) {
-                if (item.getId() == customer.getStateId()) {
+                if (item.getId() == driver.getStateId()) {
                     actvState.setText(item.getText(), false);
-                    loadCities(customer.getStateId());
+                    loadCities(driver.getStateId());
                     break;
                 }
             }
         }
 
-        if (customer.getCityId() > 0) {
+        if (driver.getCityId() > 0) {
             for (DropdownItem item : cityList) {
-                if (item.getId() == customer.getCityId()) {
+                if (item.getId() == driver.getCityId()) {
                     actvCity.setText(item.getText(), false);
                     break;
                 }
@@ -191,10 +208,28 @@ public class RegistrationActivity extends AppCompatActivity {
         registration.setPhoneNumber(etMobileNumber.getText().toString().trim());
         registration.setAddress(etAddress.getText().toString().trim());
 
-        // TODO: Get actual city and state IDs from your dropdown selections
-        registration.setCityId(currentCustomer != null ? currentCustomer.getCityId() : 0);
-        registration.setStateId(currentCustomer != null ? currentCustomer.getStateId() : 0);
-        registration.setRoleId(currentCustomer != null ? currentCustomer.getRoleId() : 1);
+        // Get selected city and state IDs from dropdowns
+        int selectedStateId = 0;
+        int selectedCityId = 0;
+        // Find selected state ID
+        String selectedStateText = actvState.getText().toString();
+        for (DropdownItem item : stateList) {
+            if (item.getText().equals(selectedStateText)) {
+                selectedStateId = item.getId();
+                break;
+            }
+        }
+        // Find selected city ID
+        String selectedCityText = actvCity.getText().toString();
+        for (DropdownItem item : cityList) {
+            if (item.getText().equals(selectedCityText)) {
+                selectedCityId = item.getId();
+                break;
+            }
+        }
+        registration.setStateId(selectedStateId);
+        registration.setCityId(selectedCityId);
+        registration.setRoleId(currentDriver != null ? currentDriver.getRoleId() : 1);
         registration.setActive(true);
 
         registrationRepository.registerUser(registration,
@@ -208,6 +243,7 @@ public class RegistrationActivity extends AppCompatActivity {
                         btnEdit.setVisibility(View.VISIBLE);
                         Toast.makeText(RegistrationActivity.this,
                                 "Profile saved successfully!", Toast.LENGTH_SHORT).show();
+                        loadDriverData();
                     }
 
                     @Override
@@ -254,9 +290,10 @@ public class RegistrationActivity extends AppCompatActivity {
         etEmail.setEnabled(editable);
         etMobileNumber.setEnabled(editable);
         etAddress.setEnabled(editable);
-        etPincode.setEnabled(editable);
+        //etPincode.setEnabled(editable);
         actvCity.setEnabled(editable);
         actvState.setEnabled(editable);
+
     }
 
     private void showLoading(boolean show) {
@@ -280,7 +317,7 @@ public class RegistrationActivity extends AppCompatActivity {
 
                 actvState.setOnItemClickListener((parent, view, position, id) -> {
                     DropdownItem selectedState = (DropdownItem) parent.getItemAtPosition(position);
-                    currentCustomer.setStateId(selectedState.getId());
+                    currentDriver.setStateId(selectedState.getId());
                     loadCities(selectedState.getId());
                 });
             } else {
@@ -303,13 +340,13 @@ public class RegistrationActivity extends AppCompatActivity {
 
                 actvCity.setOnItemClickListener((parent, view, position, id) -> {
                     DropdownItem selectedCity = (DropdownItem) parent.getItemAtPosition(position);
-                    currentCustomer.setCityId(selectedCity.getId());
+                    currentDriver.setCityId(selectedCity.getId());
                 });
 
                 // Set city if customer has one
-                if (currentCustomer != null && currentCustomer.getCityId() > 0) {
+                if (currentDriver != null && currentDriver.getCityId() > 0) {
                     for (DropdownItem item : cityList) {
-                        if (item.getId() == currentCustomer.getCityId()) {
+                        if (item.getId() == currentDriver.getCityId()) {
                             actvCity.setText(item.getText(), false);
                             break;
                         }

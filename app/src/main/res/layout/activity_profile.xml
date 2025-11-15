@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/white">
+    android:background="?attr/background_color">
 
     <!-- Main Content -->
     <LinearLayout
@@ -16,7 +16,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="16dp"
-            android:background="@android:color/white">
+            android:background="?attr/surface_background_color">
 
             <ImageView
                 android:id="@+id/btnBack"
@@ -24,6 +24,7 @@
                 android:layout_height="24dp"
                 android:layout_centerVertical="true"
                 android:src="@drawable/ic_arrow_back"
+                app:tint="?attr/icon_tint_color"
                 android:contentDescription="Back" />
 
             <TextView
@@ -33,25 +34,28 @@
                 android:text="Profile"
                 android:textSize="20sp"
                 android:textStyle="bold"
-                android:textColor="@android:color/black" />
+                android:textColor="?attr/text_primary_color" />
         </RelativeLayout>
 
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="#E0E0E0" />
+            android:background="?attr/border_color_attr" />
 
         <ScrollView
+            android:id="@+id/scrollView"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:paddingBottom="80dp">
+            android:paddingBottom="80dp"
+            android:fillViewport="true">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="20dp">
+                android:padding="20dp"
+                android:paddingBottom="150dp">
 
                 <!-- Profile Picture -->
                 <RelativeLayout
@@ -80,7 +84,7 @@
                     android:text="Your Profile"
                     android:textSize="22sp"
                     android:textStyle="bold"
-                    android:textColor="@android:color/black"
+                    android:textColor="?attr/text_primary_color"
                     android:layout_marginBottom="8dp" />
 
                 <!-- User Email/Description -->
@@ -91,7 +95,7 @@
                     android:layout_gravity="center"
                     android:text="Manage your account and preferences"
                     android:textSize="14sp"
-                    android:textColor="#666666"
+                    android:textColor="?attr/text_secondary_color"
                     android:layout_marginBottom="30dp" />
 
                 <!-- Menu Items Container -->
@@ -116,6 +120,7 @@
                             android:layout_width="24dp"
                             android:layout_height="24dp"
                             android:src="@drawable/ic_person"
+                            app:tint="?attr/icon_tint_color"
                             android:contentDescription="Personal Information" />
 
                         <TextView
@@ -125,12 +130,13 @@
                             android:layout_marginStart="16dp"
                             android:text="Personal Information"
                             android:textSize="16sp"
-                            android:textColor="@android:color/black" />
+                            android:textColor="?attr/text_primary_color" />
 
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
                             android:src="@drawable/ic_arrow_right"
+                            app:tint="?attr/icon_tint_color"
                             android:contentDescription="Arrow" />
                     </LinearLayout>
 
@@ -138,7 +144,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
                         android:layout_marginStart="56dp"
-                        android:background="#E0E0E0" />
+                        android:background="?attr/border_color_attr" />
 
                     <!-- Payment Methods -->
                     <LinearLayout
@@ -154,6 +160,7 @@
                             android:layout_width="24dp"
                             android:layout_height="24dp"
                             android:src="@drawable/ic_payment"
+                            app:tint="?attr/icon_tint_color"
                             android:contentDescription="Payment Methods" />
 
                         <TextView
@@ -163,12 +170,13 @@
                             android:layout_marginStart="16dp"
                             android:text="Payment Methods"
                             android:textSize="16sp"
-                            android:textColor="@android:color/black" />
+                            android:textColor="?attr/text_primary_color" />
 
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
                             android:src="@drawable/ic_arrow_right"
+                            app:tint="?attr/icon_tint_color"
                             android:contentDescription="Arrow" />
                     </LinearLayout>
 
@@ -176,7 +184,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
                         android:layout_marginStart="56dp"
-                        android:background="#E0E0E0" />
+                        android:background="?attr/border_color_attr" />
 
                     <!-- Notifications -->
                     <LinearLayout
@@ -192,6 +200,7 @@
                             android:layout_width="24dp"
                             android:layout_height="24dp"
                             android:src="@drawable/ic_notification"
+                            app:tint="?attr/icon_tint_color"
                             android:contentDescription="Notifications" />
 
                         <TextView
@@ -201,12 +210,13 @@
                             android:layout_marginStart="16dp"
                             android:text="Notifications"
                             android:textSize="16sp"
-                            android:textColor="@android:color/black" />
+                            android:textColor="?attr/text_primary_color" />
 
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
                             android:src="@drawable/ic_arrow_right"
+                            app:tint="?attr/icon_tint_color"
                             android:contentDescription="Arrow" />
                     </LinearLayout>
 
@@ -214,7 +224,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
                         android:layout_marginStart="56dp"
-                        android:background="#E0E0E0" />
+                        android:background="?attr/border_color_attr" />
 
                     <!-- Help & Support -->
                     <LinearLayout
@@ -230,6 +240,7 @@
                             android:layout_width="24dp"
                             android:layout_height="24dp"
                             android:src="@drawable/ic_help"
+                            app:tint="?attr/icon_tint_color"
                             android:contentDescription="Help &amp; Support" />
 
                         <TextView
@@ -239,12 +250,13 @@
                             android:layout_marginStart="16dp"
                             android:text="Help &amp; Support"
                             android:textSize="16sp"
-                            android:textColor="@android:color/black" />
+                            android:textColor="?attr/text_primary_color" />
 
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
                             android:src="@drawable/ic_arrow_right"
+                            app:tint="?attr/icon_tint_color"
                             android:contentDescription="Arrow" />
                     </LinearLayout>
 
@@ -252,7 +264,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
                         android:layout_marginStart="56dp"
-                        android:background="#E0E0E0" />
+                        android:background="?attr/border_color_attr" />
 
                     <!-- Settings -->
                     <LinearLayout
@@ -268,6 +280,7 @@
                             android:layout_width="24dp"
                             android:layout_height="24dp"
                             android:src="@drawable/ic_settings"
+                            app:tint="?attr/icon_tint_color"
                             android:contentDescription="Settings" />
 
                         <TextView
@@ -277,15 +290,53 @@
                             android:layout_marginStart="16dp"
                             android:text="Settings"
                             android:textSize="16sp"
-                            android:textColor="@android:color/black" />
+                            android:textColor="?attr/text_primary_color" />
 
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
                             android:src="@drawable/ic_arrow_right"
+                            app:tint="?attr/icon_tint_color"
                             android:contentDescription="Arrow" />
                     </LinearLayout>
                 </LinearLayout>
+
+                <!-- Logout Button -->
+                <LinearLayout
+                    android:id="@+id/llLogout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="16dp"
+                    android:layout_marginTop="24dp"
+                    android:background="@drawable/gallery_button_background"
+                    android:gravity="center_vertical">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_logout"
+                        app:tint="#F44336"
+                        android:contentDescription="Logout" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="16dp"
+                        android:text="Logout"
+                        android:textSize="16sp"
+                        android:textColor="#F44336"
+                        android:textStyle="bold" />
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_arrow_right"
+                        app:tint="#F44336"
+                        android:contentDescription="Arrow" />
+                </LinearLayout>
+
             </LinearLayout>
         </ScrollView>
     </LinearLayout>
@@ -296,7 +347,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:background="#FFFFFF"
+        android:background="?attr/surface_background_color"
         app:elevation="8dp"
         app:itemIconTint="@color/bottom_nav_color"
         app:itemTextColor="@color/bottom_nav_color"

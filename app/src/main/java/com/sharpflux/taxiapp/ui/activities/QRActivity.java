@@ -1,122 +1,78 @@
 package com.sharpflux.taxiapp.ui.activities;
 
-import android.Manifest;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.net.Uri;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.provider.MediaStore;
+import android.os.Environment;
 import android.util.Log;
-import android.view.View;
-import android.widget.ImageButton;
-import android.widget.LinearLayout;
+import android.view.WindowInsets;
+import android.widget.ImageView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.OptIn;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.camera.core.Camera;
-import androidx.camera.core.CameraSelector;
-import androidx.camera.core.ExperimentalGetImage;
-import androidx.camera.core.ImageAnalysis;
-import androidx.camera.core.ImageProxy;
-import androidx.camera.core.Preview;
-import androidx.camera.lifecycle.ProcessCameraProvider;
-import androidx.camera.view.PreviewView;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.mlkit.vision.barcode.BarcodeScanner;
-import com.google.mlkit.vision.barcode.BarcodeScannerOptions;
-import com.google.mlkit.vision.barcode.BarcodeScanning;
-import com.google.mlkit.vision.barcode.common.Barcode;
-import com.google.mlkit.vision.common.InputImage;
 import com.sharpflux.taxiapp.R;
+import com.sharpflux.taxiapp.data.network.APIs;
 
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
-public class ScannerActivity extends AppCompatActivity {
+public class QRActivity extends AppCompatActivity {
 
-    private static final String TAG = "ScannerActivity";
-    private static final int CAMERA_PERMISSION_REQUEST_CODE = 100;
-    private static final int GALLERY_REQUEST_CODE = 101;
+    private static final String TAG = "QRActivity";
+    private static final String FILE_NAME = "qr_form.png";
 
-    private PreviewView previewView;
-    private ImageButton btnBack, btnFlash, btnQR, btnMenu;
-    private LinearLayout btnUploadFromGallery;
-    private View centerOverlay;
+    private ImageView qrCodeImage, btnBack;
     private BottomNavigationView bottomNavigationView;
-
-    private ProcessCameraProvider cameraProvider;
-    private Camera camera;
-    private ExecutorService cameraExecutor;
-    private BarcodeScanner barcodeScanner;
-    private boolean isFlashEnabled = false;
-    private boolean isScanning = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_scanner);
+        setContentView(R.layout.activity_qr);
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+            getWindow().getDecorView().setOnApplyWindowInsetsListener((v, insets) -> {
+                int topInset = insets.getInsets(WindowInsets.Type.statusBars()).top;
+                v.setPadding(0, topInset, 0, 0);
+                return insets;
+            });
+        } else {
+            getWindow().getDecorView().setOnApplyWindowInsetsListener((v, insets) -> {
+                int topInset = insets.getSystemWindowInsetTop();
+                v.setPadding(0, topInset, 0, 0);
+                return insets.consumeSystemWindowInsets();
+            });
+        }
 
         initViews();
-        initBarcodeScanner();
-        setupClickListeners();
+        setupListeners();
         setupBottomNavigation();
 
-        // Initialize camera executor
-        cameraExecutor = Executors.newSingleThreadExecutor();
-
-        // Check camera permission and start camera
-        checkPermissionsAndStartCamera();
-    }
-
-    private void checkPermissionsAndStartCamera() {
-        if (allPermissionsGranted()) {
-            Log.d(TAG, "Camera permissions granted, starting camera");
-            startCamera();
-        } else {
-            Log.d(TAG, "Requesting camera permissions");
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.CAMERA},
-                    CAMERA_PERMISSION_REQUEST_CODE);
+        int driverId = getDriverId();
+        if (driverId == 0) {
+            Toast.makeText(this, "Driver ID not found", Toast.LENGTH_SHORT).show();
+            return;
         }
+
+        File qrFile = new File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), FILE_NAME);
+
+        // Always fetch fresh QR code from API
+        fetchAndSaveQRCode(driverId, qrFile);
     }
 
     private void initViews() {
-        previewView = findViewById(R.id.previewView);
+        qrCodeImage = findViewById(R.id.qrCodeImage);
         btnBack = findViewById(R.id.btnBack);
-        btnFlash = findViewById(R.id.btnFlash);
-        btnQR = findViewById(R.id.btnQR);
-        btnMenu = findViewById(R.id.btnMenu);
-        btnUploadFromGallery = findViewById(R.id.btnUploadFromGallery);
-        centerOverlay = findViewById(R.id.centerOverlay);
         bottomNavigationView = findViewById(R.id.bottom_navigation);
     }
 
-    private void initBarcodeScanner() {
-        BarcodeScannerOptions options = new BarcodeScannerOptions.Builder()
-                .setBarcodeFormats(Barcode.FORMAT_ALL_FORMATS)
-                .build();
-        barcodeScanner = BarcodeScanning.getClient(options);
-    }
-
-    private void setupClickListeners() {
-        btnBack.setOnClickListener(v -> onBackPressed());
-
-        btnFlash.setOnClickListener(v -> toggleFlash());
-
-        btnQR.setOnClickListener(v ->
-                Toast.makeText(this, "QR code info", Toast.LENGTH_SHORT).show());
-
-        btnMenu.setOnClickListener(v ->
-                Toast.makeText(this, "Menu clicked", Toast.LENGTH_SHORT).show());
-
-        btnUploadFromGallery.setOnClickListener(v -> openGallery());
+    private void setupListeners() {
+        btnBack.setOnClickListener(v -> finish());
     }
 
     private void setupBottomNavigation() {
@@ -126,19 +82,19 @@ public class ScannerActivity extends AppCompatActivity {
             int id = item.getItemId();
 
             if (id == R.id.nav_home) {
-                startActivity(new Intent(ScannerActivity.this, HomeActivity.class));
+                startActivity(new Intent(QRActivity.this, HomeActivity.class));
                 overridePendingTransition(0, 0);
                 finish();
                 return true;
             } else if (id == R.id.nav_scanner) {
                 return true;
             } else if (id == R.id.nav_profile) {
-                startActivity(new Intent(ScannerActivity.this, ProfileActivity.class));
+                startActivity(new Intent(QRActivity.this, ProfileActivity.class));
                 overridePendingTransition(0, 0);
                 finish();
                 return true;
             } else if (id == R.id.nav_settings) {
-                startActivity(new Intent(ScannerActivity.this, SignUpActivity.class));
+                startActivity(new Intent(QRActivity.this, BillRequestActivity.class));
                 overridePendingTransition(0, 0);
                 finish();
                 return true;
@@ -147,283 +103,61 @@ public class ScannerActivity extends AppCompatActivity {
         });
     }
 
-    private void openGallery() {
-        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-        intent.setType("image/*");
-        startActivityForResult(intent, GALLERY_REQUEST_CODE);
+    private int getDriverId() {
+        return getSharedPreferences("MyAppPrefs", MODE_PRIVATE).getInt("user_id", 0);
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == GALLERY_REQUEST_CODE && resultCode == RESULT_OK && data != null) {
-            Uri imageUri = data.getData();
-            if (imageUri != null) {
-                // Process image from gallery for QR code scanning
-                processImageFromGallery(imageUri);
-            }
-        }
-    }
-
-    private void processImageFromGallery(Uri imageUri) {
-        try {
-            InputImage image = InputImage.fromFilePath(this, imageUri);
-            barcodeScanner.process(image)
-                    .addOnSuccessListener(barcodes -> {
-                        for (Barcode barcode : barcodes) {
-                            String rawValue = barcode.getRawValue();
-                            if (rawValue != null) {
-                                onBarcodeDetected(rawValue);
-                                break;
-                            }
-                        }
-                        if (barcodes.isEmpty()) {
-                            Toast.makeText(this, "No QR code found in image", Toast.LENGTH_SHORT).show();
-                        }
-                    })
-                    .addOnFailureListener(e -> {
-                        Log.e(TAG, "Gallery barcode scanning failed", e);
-                        Toast.makeText(this, "Failed to scan image", Toast.LENGTH_SHORT).show();
-                    });
-        } catch (Exception e) {
-            Log.e(TAG, "Error processing gallery image", e);
-            Toast.makeText(this, "Error processing image", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private void startCamera() {
-        ListenableFuture<ProcessCameraProvider> cameraProviderFuture =
-                ProcessCameraProvider.getInstance(this);
-
-        cameraProviderFuture.addListener(() -> {
+    private void fetchAndSaveQRCode(int driverId, File file) {
+        new Thread(() -> {
             try {
-                cameraProvider = cameraProviderFuture.get();
+                // Add download=true query parameter
+                String apiUrl = APIs.QR_URL.replace("{driverId}", String.valueOf(driverId)) + "?download=true";
+                Log.d(TAG, "Fetching QR from: " + apiUrl);
 
-                // Add a small delay to ensure the PreviewView is ready
-                previewView.post(() -> bindCameraUseCases());
+                URL url = new URL(apiUrl);
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("GET");
+                connection.connect();
 
-            } catch (ExecutionException | InterruptedException e) {
-                Log.e(TAG, "Camera provider initialization failed", e);
-                Toast.makeText(this, "Camera initialization failed", Toast.LENGTH_SHORT).show();
-            }
-        }, ContextCompat.getMainExecutor(this));
-    }
+                int responseCode = connection.getResponseCode();
+                if (responseCode == 200) {
+                    InputStream inputStream = connection.getInputStream();
+                    Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
 
-    @OptIn(markerClass = ExperimentalGetImage.class)
-    private void bindCameraUseCases() {
-        if (cameraProvider == null) {
-            return;
-        }
-
-        // Preview use case
-        Preview preview = new Preview.Builder()
-                .setTargetAspectRatio(androidx.camera.core.AspectRatio.RATIO_16_9)
-                .build();
-
-        // Image analysis use case for barcode scanning
-        ImageAnalysis imageAnalysis = new ImageAnalysis.Builder()
-                .setTargetAspectRatio(androidx.camera.core.AspectRatio.RATIO_16_9)
-                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                .build();
-
-        imageAnalysis.setAnalyzer(cameraExecutor, this::analyzeImage);
-
-        // Camera selector
-        CameraSelector cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA;
-
-        try {
-            // Unbind all use cases before rebinding
-            cameraProvider.unbindAll();
-
-            // Bind use cases to lifecycle
-            camera = cameraProvider.bindToLifecycle(
-                    this, cameraSelector, preview, imageAnalysis);
-
-            // Set surface provider AFTER binding to lifecycle
-            preview.setSurfaceProvider(ContextCompat.getMainExecutor(this),
-                    previewView.getSurfaceProvider());
-
-        } catch (Exception e) {
-            Log.e(TAG, "Use case binding failed", e);
-            Toast.makeText(this, "Camera initialization failed", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    @ExperimentalGetImage
-    private void analyzeImage(ImageProxy imageProxy) {
-        if (!isScanning) {
-            imageProxy.close();
-            return;
-        }
-
-        if (imageProxy.getImage() == null) {
-            imageProxy.close();
-            return;
-        }
-
-        InputImage image = InputImage.fromMediaImage(
-                imageProxy.getImage(),
-                imageProxy.getImageInfo().getRotationDegrees()
-        );
-
-        barcodeScanner.process(image)
-                .addOnSuccessListener(barcodes -> {
-                    for (Barcode barcode : barcodes) {
-                        String rawValue = barcode.getRawValue();
-                        if (rawValue != null) {
-                            onBarcodeDetected(rawValue);
-                            break;
-                        }
+                    if (bitmap != null) {
+                        runOnUiThread(() -> qrCodeImage.setImageBitmap(bitmap));
+                        saveQRCode(bitmap, file);
+                        runOnUiThread(() ->
+                                Toast.makeText(this, "QR code loaded", Toast.LENGTH_SHORT).show());
+                    } else {
+                        runOnUiThread(() ->
+                                Toast.makeText(this, "Failed to decode QR", Toast.LENGTH_SHORT).show());
                     }
-                })
-                .addOnFailureListener(e -> Log.e(TAG, "Barcode scanning failed", e))
-                .addOnCompleteListener(task -> imageProxy.close());
-    }
+                } else {
+                    runOnUiThread(() ->
+                            Toast.makeText(this, "Server error: " + responseCode, Toast.LENGTH_SHORT).show());
+                }
 
-    private void onBarcodeDetected(String barcode) {
-        runOnUiThread(() -> {
-            isScanning = false;
-            stopScanAnimation();
-
-            Toast.makeText(this, "QR Code Scanned Successfully!", Toast.LENGTH_LONG).show();
-            Log.d("Scanner", "QR Result = " + barcode);
-
-            // Send scanned data to BillActivity
-            Intent intent = new Intent(ScannerActivity.this, BillActivity.class);
-            intent.putExtra("SCANNED_DATA", barcode);
-            startActivity(intent);
-        });
-    }
-
-    private void processScanResult(String result) {
-        Log.d(TAG, "Scan result: " + result);
-
-        // Handle different types of QR codes
-        if (result.startsWith("upi://") || result.contains("paytm") ||
-                result.contains("googlepay") || result.contains("phonepe")) {
-            // Handle payment QR codes
-            handlePaymentQR(result);
-        } else if (result.startsWith("http://") || result.startsWith("https://")) {
-            // Handle URL QR codes
-            handleURLQR(result);
-        } else {
-            // Handle other QR codes
-            handleGenericQR(result);
-        }
-    }
-
-    private void handlePaymentQR(String paymentData) {
-        // TODO: Implement payment QR handling
-        Toast.makeText(this, "Payment QR detected", Toast.LENGTH_SHORT).show();
-    }
-
-    private void handleURLQR(String url) {
-        // TODO: Implement URL QR handling
-        Toast.makeText(this, "URL QR detected: " + url, Toast.LENGTH_SHORT).show();
-    }
-
-    private void handleGenericQR(String data) {
-        // TODO: Implement generic QR handling
-        Toast.makeText(this, "QR Data: " + data, Toast.LENGTH_SHORT).show();
-    }
-
-    private void toggleFlash() {
-        if (camera != null && camera.getCameraInfo().hasFlashUnit()) {
-            isFlashEnabled = !isFlashEnabled;
-            camera.getCameraControl().enableTorch(isFlashEnabled);
-
-            btnFlash.setImageResource(isFlashEnabled ?
-                    R.drawable.ic_flash_on : R.drawable.ic_flash_off);
-
-            Toast.makeText(this, isFlashEnabled ? "Flash ON" : "Flash OFF",
-                    Toast.LENGTH_SHORT).show();
-        } else {
-            Toast.makeText(this, "Flash not available", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private void startScanAnimation() {
-        // Only start animation if camera is working
-        previewView.post(() -> {
-            if (centerOverlay != null) {
-                centerOverlay.animate()
-                        .alpha(0.1f)
-                        .setDuration(1000)
-                        .withEndAction(() -> {
-                            if (isScanning) {
-                                centerOverlay.animate()
-                                        .alpha(0.3f)
-                                        .setDuration(1000)
-                                        .withEndAction(this::startScanAnimation);
-                            }
-                        });
+                connection.disconnect();
+            } catch (Exception e) {
+                Log.e(TAG, "Error fetching QR", e);
+                runOnUiThread(() ->
+                        Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show());
             }
-        });
+        }).start();
     }
 
-    private void stopScanAnimation() {
-        if (centerOverlay != null) {
-            centerOverlay.clearAnimation();
-            centerOverlay.setAlpha(0.5f);
-        }
-    }
-
-    private boolean allPermissionsGranted() {
-        return ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
-                == PackageManager.PERMISSION_GRANTED;
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
-        if (requestCode == CAMERA_PERMISSION_REQUEST_CODE) {
-            if (allPermissionsGranted()) {
-                Log.d(TAG, "Camera permission granted, starting camera");
-                startCamera();
-                startScanAnimation();
-            } else {
-                Log.e(TAG, "Camera permission denied");
-                Toast.makeText(this, "Camera permission is required for scanning",
-                        Toast.LENGTH_LONG).show();
-                finish();
-            }
-        }
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (cameraExecutor != null) {
-            cameraExecutor.shutdown();
-        }
-        if (barcodeScanner != null) {
-            barcodeScanner.close();
+    private void saveQRCode(Bitmap bitmap, File file) {
+        try (FileOutputStream out = new FileOutputStream(file)) {
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
+        } catch (Exception e) {
+            Log.e(TAG, "Error saving QR", e);
         }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        isScanning = true;
-        startScanAnimation();
-
-        // Update bottom navigation selection
-        if (bottomNavigationView != null) {
-            bottomNavigationView.setSelectedItemId(R.id.nav_scanner);
-        }
-
-        // Restart camera if needed
-        if (cameraProvider == null && allPermissionsGranted()) {
-            startCamera();
-        }
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        isScanning = false;
-        stopScanAnimation();
+        bottomNavigationView.setSelectedItemId(R.id.nav_scanner);
     }
 }

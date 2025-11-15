@@ -10,7 +10,7 @@
     <color name="overlay_dark">#80000000</color>
 
     <color name="scanner_corner_red">#FF6B6B</color>
-    <color name="scanner_corner_yellow">#FFD93D</color>
+    <color name="scanner_corner_yellow">#FF8F00</color>
     <color name="scanner_corner_teal">#4ECDC4</color>
     <color name="scanner_corner_green">#6BCF7F</color>
     <color name="scanner_background">#000000</color>
@@ -24,8 +24,8 @@
     <color name="primary_color">#FF6B35</color>
     <color name="primary_dark">#E55A2B</color>
     <color name="colorPrimary">#FFC107</color> <!-- Material Yellow -->
-    <color name="colorAccent">#FFC107</color>
-    <color name="accent_color">#FFC107</color>
+    <color name="colorAccent">#FFB300</color>
+    <color name="accent_color">#FFEB3B</color>
     <!-- Background Colors -->
     <color name="onboarding_background">#FFFFFF</color>
 
@@ -36,8 +36,8 @@
     <!-- Indicator Colors -->
     <color name="dot_inactive">#E0E0E0</color>
 
-<!--    <color name="primary_color">#1976D2</color>-->
-<!--    <color name="primary_dark">#1565C0</color>-->
+    <!--    <color name="primary_color">#1976D2</color>-->
+    <!--    <color name="primary_dark">#1565C0</color>-->
     <color name="primary_light">#BBDEFB</color>
 
     <!-- Secondary Colors -->
@@ -50,6 +50,7 @@
     <color name="surface_color">#FFFFFF</color>
 
     <!-- Text Colors -->
+    <color name="link_color">#FFC107</color>
 
     <color name="text_hint">#BDBDBD</color>
 
@@ -61,4 +62,12 @@
     <!-- Other Colors -->
     <color name="divider_color">#E0E0E0</color>
     <color name="disabled_color">#BDBDBD</color>
+
+
+    <color name="background_primary">#121212</color>
+    <color name="background_secondary">#1E1E1E</color>
+    <color name="input_background">#2C2C2C</color>
+    <color name="border_color">#3C3C3C</color>
+    <color name="icon_tint">#B3B3B3</color>
+    <!--    <color name="link_color">#4285F4</color>-->
 </resources>

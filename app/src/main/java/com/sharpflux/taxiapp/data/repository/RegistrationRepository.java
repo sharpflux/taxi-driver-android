@@ -50,11 +50,10 @@ public class RegistrationRepository {
             jsonBody.put("stateId", registration.getStateId());
             jsonBody.put("roleId", registration.getRoleId());
             jsonBody.put("isActive", registration.isActive());
-            // Add other fields as needed
 
             JsonObjectRequest request = new JsonObjectRequest(
                     Request.Method.POST,
-                    APIs.RegisterURL,
+                    APIs.DriverRegisterURL,
                     jsonBody,
                     response -> {
                         Log.d(TAG, "Registration successful: " + response.toString());
@@ -84,7 +83,8 @@ public class RegistrationRepository {
     }
     public void getDropdownData(String searchTerm, int page, int pageSize, int type, int parentId,
                                 DropdownCallback callback) {
-        String url = "https://tdm0f26m-7270.inc1.devtunnels.ms/api/Utility/allDropdown?"
+//        String url = "https://6kt492jn-7270.inc1.devtunnels.ms/api/Utility/allDropdown?"
+         String url = APIs.Main_URL+ "Utility/allDropdown?"
                 + "page=" + page
                 + "&pageSize=" + pageSize
                 + "&type=" + type

@@ -1,6 +1,8 @@
 package com.sharpflux.taxiapp.ui.activities;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.InputType;
 import android.view.View;
@@ -15,11 +17,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.sharpflux.taxiapp.R;
+import com.sharpflux.taxiapp.utils.SessionManager;
 import com.sharpflux.taxiapp.viewmodel.AuthViewModel;
 
 public class LoginActivity extends AppCompatActivity {
 
     private AuthViewModel viewModel;
+    private SessionManager sessionManager;
     private EditText etUsername, etPassword;
     private ImageView ivPasswordToggle;
     private TextView tvErrorMessage;
@@ -28,7 +32,18 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Initialize session manager
+        sessionManager = new SessionManager(this);
+
+        // Check if user is already logged in
+        if (sessionManager.isLoggedIn()) {
+            navigateToHome();
+            return;
+        }
+
         setContentView(R.layout.activity_login);
+
 
         getWindow().setStatusBarColor(getResources().getColor(android.R.color.white));
         getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
@@ -79,9 +94,18 @@ public class LoginActivity extends AppCompatActivity {
                 btnLogin.setText("Login");
 
                 if (success != null && success) {
+                    // Create login session
+                    SharedPreferences prefs = getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
+                    String email = prefs.getString("user_email", user);
+                    String userId = String.valueOf(prefs.getInt("user_id", -1));
+                    String name = prefs.getString("user_name", "");
+                    sessionManager.createLoginSession(user, email, userId,name);
+
                     Toast.makeText(this, "Login successful!", Toast.LENGTH_SHORT).show();
-                    startActivity(new Intent(LoginActivity.this, HomeActivity.class));
+                    Intent intent = new Intent(LoginActivity.this, VerificationCheckActivity.class);
+                    startActivity(intent);
                     finish();
+                    //navigateToHome();
                 } else {
                     showError("Invalid username or password");
                 }
@@ -106,8 +130,7 @@ public class LoginActivity extends AppCompatActivity {
         );
 
         tvSignUp.setOnClickListener(v -> {
-            // Navigate to SignUpActivity
-            startActivity(new Intent(LoginActivity.this, SignUpActivity.class));
+            startActivity(new Intent(LoginActivity.this, DriverRegistrationActivity.class));
         });
 
         btnGoogleLogin.setOnClickListener(v ->
@@ -117,10 +140,20 @@ public class LoginActivity extends AppCompatActivity {
         btnAppleLogin.setOnClickListener(v ->
                 Toast.makeText(this, "Apple login coming soon", Toast.LENGTH_SHORT).show()
         );
+
     }
 
     private void showError(String message) {
         tvErrorMessage.setText(message);
         tvErrorMessage.setVisibility(View.VISIBLE);
+    }
+
+
+
+    private void navigateToHome() {
+        Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
     }
 }

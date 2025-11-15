@@ -1,3 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Define custom attributes for theme colors -->
+    <attr name="background_color" format="color" />
+    <attr name="surface_background_color" format="color" />
+    <attr name="text_primary_color" format="color" />
+    <attr name="text_secondary_color" format="color" />
+    <attr name="text_hint_color" format="color" />
+    <attr name="input_bg_color" format="color" />
+    <attr name="border_color_attr" format="color" />
+    <attr name="icon_tint_color" format="color" />
+    <attr name="link_text_color" format="color" />
+    <attr name="text_on_gradient_color" format="color" />
+    <attr name="icon_tint_primary" format="color" />
+    <attr name="icon_tint_orange" format="color" />
+    <attr name="icon_tint_green" format="color" />
 </resources>

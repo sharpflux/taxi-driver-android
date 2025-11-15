@@ -12,7 +12,7 @@
         android:layout_height="120dp"
         android:layout_centerInParent="true"
         android:contentDescription="App Logo"
-        android:src="@drawable/ic_taxi"
+        android:src="@drawable/logo_mobility_brown"
         android:scaleType="centerCrop"
         app:shapeAppearanceOverlay="@style/RoundedImageStyle"
         android:elevation="8dp" />
@@ -23,7 +23,7 @@
         android:id="@+id/appName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="CityRide Taxi"
+        android:text="Logo Mobility"
         android:textSize="28sp"
         android:textStyle="bold"
         android:textColor="#000000"

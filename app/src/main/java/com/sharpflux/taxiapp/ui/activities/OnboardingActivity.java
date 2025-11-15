@@ -160,7 +160,7 @@ public class OnboardingActivity extends AppCompatActivity {
     }
 
     private void navigateToLogin() {
-        startActivity(new Intent(OnboardingActivity.this, LoginActivity.class));
+        startActivity(new Intent(OnboardingActivity.this, PhoneLoginActivity.class));
         finish();
         // Add smooth transition animation
         overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);

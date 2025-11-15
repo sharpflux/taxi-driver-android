@@ -3,6 +3,18 @@
     xmlns:tools="http://schemas.android.com/tools">
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28"/>
+
+
+
+    <!-- Wake lock to keep connection alive -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <!-- Vibration for notifications -->
+    <uses-permission android:name="android.permission.VIBRATE" />
     <uses-feature
         android:name="android.hardware.camera"
         android:required="true" />
@@ -43,11 +55,16 @@
 
         <activity
             android:name=".ui.activities.HomeActivity"
-            android:exported="false"
-            android:theme="@style/Theme.TaxiApp.NoActionBar" />
+            android:exported="true">
+<!--            <intent-filter>-->
+<!--                <action android:name="android.intent.action.MAIN" />-->
+<!--                <category android:name="android.intent.category.LAUNCHER" />-->
+<!--            </intent-filter>-->
+        </activity>
         <activity
             android:name=".ui.activities.RegistrationActivity"
             android:exported="false"
+            android:windowSoftInputMode="adjustResize"
             android:theme="@style/Theme.TaxiApp.NoActionBar" />
         <activity
             android:name=".ui.activities.SignUpActivity"
@@ -63,10 +80,38 @@
             android:theme="@style/Theme.TaxiApp.NoActionBar" />
 
         <activity
-            android:name=".ui.activities.ScannerActivity"
+            android:name=".ui.activities.QRActivity"
             android:screenOrientation="portrait"
             android:theme="@style/ScannerTheme"
             android:exported="false" />
+        <activity
+            android:name=".ui.activities.DriverRegistrationActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize"
+            android:theme="@style/Theme.TaxiApp.NoActionBar"/>
+        <activity
+            android:name=".ui.activities.BillRequestActivity"
+            android:exported="true"
+            android:theme="@style/Theme.TaxiApp.NoActionBar"/>
+
+        <activity
+            android:name=".ui.activities.PaymentActivity"
+            android:exported="true"
+            android:theme="@style/Theme.TaxiApp.NoActionBar"/>
+
+        <activity
+            android:name=".ui.activities.VerificationCheckActivity"
+            android:exported="true"
+            android:theme="@style/Theme.TaxiApp.NoActionBar"/>
+        <activity
+            android:name=".ui.activities.PhoneLoginActivity"
+            android:exported="true"
+            android:theme="@style/Theme.TaxiApp.NoActionBar"/>
+        <activity
+            android:name=".ui.activities.OtpVerificationActivity"
+            android:exported="true"
+            android:theme="@style/Theme.TaxiApp.NoActionBar"/>
+
 
     </application>
 </manifest>

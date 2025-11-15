@@ -52,6 +52,8 @@ public class AuthRepository {
                         editor.putInt("user_id", user.getInt("id"));
                         editor.putString("user_name", user.getString("name"));
                         editor.putString("user_email", user.getString("email"));
+                        editor.putString("user_phone", user.getString("phoneNumber"));
+                        //editor.putInt("verificationStatus", user.getInt("StatuId"));
                         editor.putBoolean("isActive", user.getBoolean("isActive"));
                         editor.putInt("roleId", user.optInt("roleId", -1));
                         editor.putInt("locationId", user.optInt("locationId", -1));
