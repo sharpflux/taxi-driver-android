@@ -2,6 +2,7 @@ package com.sharpflux.taxiapp.ui.activities;
 
 import android.app.DatePickerDialog;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.ImageDecoder;
 import android.net.Uri;
@@ -13,6 +14,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewTreeObserver;
+import android.view.Window;
+import android.view.WindowInsets;
 import android.view.WindowManager;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
@@ -33,6 +36,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.core.widget.NestedScrollView;
 
 import com.sharpflux.taxiapp.R;
@@ -50,6 +54,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import android.app.Dialog;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.view.ViewGroup;
+import com.google.android.material.card.MaterialCardView;
 
 public class DriverRegistrationActivity extends AppCompatActivity {
 
@@ -98,11 +107,43 @@ public class DriverRegistrationActivity extends AppCompatActivity {
 
     private ActivityResultLauncher<Intent> imagePickerLauncher;
     private View rootView;
+    private boolean termsAccepted = false;
+    private MaterialCardView cvTermsConditions;
+    private ImageView ivTermsCheck;
+    private TextView tvTermsStatus;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_driver_registration);
+
+        //notification bar
+        Window window = getWindow();
+        if ((getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK)
+                == Configuration.UI_MODE_NIGHT_YES) {
+            // Dark mode
+            window.setStatusBarColor(ContextCompat.getColor(this, R.color.black));
+            window.getDecorView().setSystemUiVisibility(0); // remove light icons flag
+        } else {
+            // Light mode
+            window.setStatusBarColor(ContextCompat.getColor(this, R.color.white));
+            window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+        }
+        //layout
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+            getWindow().getDecorView().setOnApplyWindowInsetsListener((v, insets) -> {
+                int topInset = insets.getInsets(WindowInsets.Type.statusBars()).top;
+                v.setPadding(0, topInset, 0, 0);
+                return insets;
+            });
+        } else {
+            getWindow().getDecorView().setOnApplyWindowInsetsListener((v, insets) -> {
+                int topInset = insets.getSystemWindowInsetTop();
+                v.setPadding(0, topInset, 0, 0);
+                return insets.consumeSystemWindowInsets();
+            });
+        }
+
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
         rootView = findViewById(android.R.id.content);
 
@@ -114,7 +155,7 @@ public class DriverRegistrationActivity extends AppCompatActivity {
         driver.setUserId(1);
         driver.setIsActive(true);
         driver.setRoleId(2); // Driver role
-        driver.setVerificationStatus(0); // Pending
+        driver.setVerificationStatus(3); // Pending
         driver.setVerified(false);
         driver.setVerifiedBy(0);
         driver.setLocationId(0);
@@ -248,9 +289,13 @@ public class DriverRegistrationActivity extends AppCompatActivity {
         actvLanguage = findViewById(R.id.actvLanguage);
         cbSpeak = findViewById(R.id.etSpeak);
         cbUnderstand = findViewById(R.id.etUnderstand);
-        cbTerms = findViewById(R.id.etTermsConditions);
+        //cbTerms = findViewById(R.id.etTermsConditions);
         btnBack4 = findViewById(R.id.btnBack4);
         btnRegister = findViewById(R.id.btnRegister);
+
+        cvTermsConditions = findViewById(R.id.cvTermsConditions); // You'll need to add android:id to the MaterialCardView
+        ivTermsCheck = findViewById(R.id.ivTermsCheck);
+        tvTermsStatus = findViewById(R.id.tvTermsStatus);
     }
 
     private void setupImagePicker() {
@@ -332,7 +377,60 @@ public class DriverRegistrationActivity extends AppCompatActivity {
             cityList.clear();
             loadCities(selectedState.getId());
         });
+
+        cvTermsConditions.setOnClickListener(v -> showTermsDialog());
     }
+    private void showTermsDialog() {
+        Dialog dialog = new Dialog(this);
+        dialog.setContentView(R.layout.dialog_terms_conditions);
+        dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        dialog.setCancelable(false);
+
+        CheckBox cbAgreeTerms = dialog.findViewById(R.id.cbAgreeTerms);
+        //Button btnCancel = dialog.findViewById(R.id.btnCancel);
+        Button btnAccept = dialog.findViewById(R.id.btnAccept);
+
+        // Initially disable accept button
+        btnAccept.setEnabled(false);
+        btnAccept.setAlpha(0.5f);
+
+        // Enable accept button only when checkbox is checked
+        cbAgreeTerms.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            btnAccept.setEnabled(isChecked);
+            btnAccept.setAlpha(isChecked ? 1.0f : 0.5f);
+        });
+
+//        btnCancel.setOnClickListener(v -> {
+//            dialog.dismiss();
+//        });
+
+        btnAccept.setOnClickListener(v -> {
+            if (cbAgreeTerms.isChecked()) {
+                termsAccepted = true;
+                updateTermsUI(true);
+                dialog.dismiss();
+            } else {
+                Toast.makeText(this, getString(R.string.please_accept_terms), Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        dialog.show();
+    }
+    private void updateTermsUI(boolean accepted) {
+        if (accepted) {
+            tvTermsStatus.setText("Terms & Conditions Accepted ✓");
+            tvTermsStatus.setTextColor(ContextCompat.getColor(this, R.color.colorAccent));
+            ivTermsCheck.setImageResource(android.R.drawable.checkbox_on_background);
+            ivTermsCheck.setColorFilter(ContextCompat.getColor(this, R.color.colorAccent));
+        } else {
+            tvTermsStatus.setText(getString(R.string.view_terms_conditions));
+            tvTermsStatus.setTextColor(ContextCompat.getColor(this, R.color.text_primary));
+            ivTermsCheck.setImageResource(android.R.drawable.checkbox_off_background);
+            ivTermsCheck.setColorFilter(ContextCompat.getColor(this, R.color.text_secondary));
+        }
+    }
+
 
     private void handleBackPress() {
         int currentStep = viewFlipper.getDisplayedChild();
@@ -637,10 +735,13 @@ public class DriverRegistrationActivity extends AppCompatActivity {
 
         driver.setSpeak(cbSpeak.isChecked());
         driver.setUnderstand(cbUnderstand.isChecked());
-        driver.setTermsConditions(cbTerms.isChecked());
+        driver.setTermsConditions(termsAccepted);
 
+//        Log.d(TAG, "Step 4 saved: LanguageId=" + driver.getLanguageId() +
+//                ", Speak=" + driver.isSpeak() + ", Understand=" + driver.isUnderstand());
         Log.d(TAG, "Step 4 saved: LanguageId=" + driver.getLanguageId() +
-                ", Speak=" + driver.isSpeak() + ", Understand=" + driver.isUnderstand());
+                ", Speak=" + driver.isSpeak() + ", Understand=" + driver.isUnderstand() +
+                ", TermsAccepted=" + termsAccepted);
     }
 
     private void openImagePicker(int documentTypeId) {
@@ -684,9 +785,27 @@ public class DriverRegistrationActivity extends AppCompatActivity {
             }
         }
 
-        if (!cbTerms.isChecked()) {
-            Toast.makeText(this, "Please agree to Terms and Conditions", Toast.LENGTH_SHORT).show();
-            cbTerms.requestFocus();
+        // Check if terms are accepted using the boolean flag
+        if (!termsAccepted) {
+            Toast.makeText(this, getString(R.string.please_accept_terms), Toast.LENGTH_LONG).show();
+            cvTermsConditions.requestFocus();
+            // Optionally shake the card to draw attention
+            cvTermsConditions.animate()
+                    .translationX(-10f)
+                    .setDuration(100)
+                    .withEndAction(() ->
+                            cvTermsConditions.animate()
+                                    .translationX(10f)
+                                    .setDuration(100)
+                                    .withEndAction(() ->
+                                            cvTermsConditions.animate()
+                                                    .translationX(0f)
+                                                    .setDuration(100)
+                                                    .start()
+                                    )
+                                    .start()
+                    )
+                    .start();
             return;
         }
 
@@ -704,6 +823,7 @@ public class DriverRegistrationActivity extends AppCompatActivity {
         Log.d(TAG, "=== STARTING REGISTRATION ===");
         Log.d(TAG, "Driver: " + driver.getFirstName() + " " + driver.getLastName());
         Log.d(TAG, "Documents count: " + base64Map.size());
+        Log.d(TAG, "Terms Accepted: " + termsAccepted);
 
         repository.registerDriver(driver, (success, message) -> {
             runOnUiThread(() -> {

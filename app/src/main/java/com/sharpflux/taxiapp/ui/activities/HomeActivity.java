@@ -6,9 +6,12 @@ import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.view.Window;
 import android.view.WindowInsets;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -18,6 +21,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
+import androidx.core.content.ContextCompat;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.sharpflux.taxiapp.R;
@@ -45,7 +49,19 @@ public class HomeActivity extends AppCompatActivity {
         }
         setContentView(R.layout.activity_home);
 
-        // Handle window insets
+        //notification bar
+        Window window = getWindow();
+        if ((getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK)
+                == Configuration.UI_MODE_NIGHT_YES) {
+            // Dark mode
+            window.setStatusBarColor(ContextCompat.getColor(this, R.color.black));
+            window.getDecorView().setSystemUiVisibility(0); // remove light icons flag
+        } else {
+            // Light mode
+            window.setStatusBarColor(ContextCompat.getColor(this, R.color.white));
+            window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+        }
+        //layout
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
             getWindow().getDecorView().setOnApplyWindowInsetsListener((v, insets) -> {
                 int topInset = insets.getInsets(WindowInsets.Type.statusBars()).top;
@@ -225,7 +241,7 @@ public class HomeActivity extends AppCompatActivity {
             } else if (id == R.id.nav_profile) {
                 startActivity(new Intent(HomeActivity.this, ProfileActivity.class));
             } else if (id == R.id.nav_settings) {
-                startActivity(new Intent(HomeActivity.this, BillRequestActivity.class));
+                startActivity(new Intent(HomeActivity.this, RidesActivity.class));
             }
             overridePendingTransition(0, 0);
             return true;

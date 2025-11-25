@@ -1,79 +1,141 @@
 package com.sharpflux.taxiapp.ui.activities;
 
+import static com.sharpflux.taxiapp.data.network.APIs.GetDriverDocument;
+
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.Handler;
-import android.view.animation.AlphaAnimation;
-import android.view.animation.Animation;
-import android.widget.ImageView;
-import android.widget.TextView;
-
+import android.util.Log;
+import android.view.View;
+import android.view.Window;
+import android.view.WindowInsets;
+import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.Volley;
 import com.sharpflux.taxiapp.R;
+
+import org.json.JSONObject;
 
 public class SplashActivity extends AppCompatActivity {
 
-    // Splash screen display time in milliseconds
-    private static final int SPLASH_DURATION = 3000;
-    private static final String PREFS_NAME = "OnboardingPrefs";
-    private static final String KEY_ONBOARDING_COMPLETED = "onboarding_completed";
+    private static final String TAG = "SplashActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
 
-        // Initialize views
-        ImageView logoImage = findViewById(R.id.logoImage);
-        TextView appName = findViewById(R.id.appName);
-        TextView appTagline = findViewById(R.id.appTagline);
+        //notification bar
+        Window window = getWindow();
+        if ((getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK)
+                == Configuration.UI_MODE_NIGHT_YES) {
+            // Dark mode
+            window.setStatusBarColor(ContextCompat.getColor(this, R.color.black));
+            window.getDecorView().setSystemUiVisibility(0); // remove light icons flag
+        } else {
+            // Light mode
+            window.setStatusBarColor(ContextCompat.getColor(this, R.color.white));
+            window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+        }
+        //layout
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+            getWindow().getDecorView().setOnApplyWindowInsetsListener((v, insets) -> {
+                int topInset = insets.getInsets(WindowInsets.Type.statusBars()).top;
+                v.setPadding(0, topInset, 0, 0);
+                return insets;
+            });
+        } else {
+            getWindow().getDecorView().setOnApplyWindowInsetsListener((v, insets) -> {
+                int topInset = insets.getSystemWindowInsetTop();
+                v.setPadding(0, topInset, 0, 0);
+                return insets.consumeSystemWindowInsets();
+            });
+        }
+        // Delay for splash
+        new Handler().postDelayed(this::checkPaymentStatus, 1500);
+    }
 
-        // Create animations
-        Animation fadeIn = new AlphaAnimation(0.0f, 1.0f);
-        fadeIn.setDuration(1000);
+    private void checkPaymentStatus() {
 
-        // Apply animations
-        logoImage.startAnimation(fadeIn);
-        appName.startAnimation(fadeIn);
-        appTagline.startAnimation(fadeIn);
+        SharedPreferences prefs = getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
+        int driverId = prefs.getInt("user_id", 0);
 
-        // Create a slight scale animation for the logo
-        logoImage.animate()
-                .scaleX(1.1f)
-                .scaleY(1.1f)
-                .setDuration(1000)
-                .withEndAction(() ->
-                        logoImage.animate()
-                                .scaleX(1.0f)
-                                .scaleY(1.0f)
-                                .setDuration(500)
-                                .start()
-                )
-                .start();
-
-        // Set version info dynamically (optional)
-        TextView versionInfo = findViewById(R.id.versionInfo);
-        try {
-            String versionName = getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
-            versionInfo.setText("Version " + versionName);
-        } catch (Exception e) {
-            versionInfo.setText("Version 1.0");
+        if (driverId == 0) {
+            startActivity(new Intent(this, OnboardingActivity.class));
+            finish();
+            return;
         }
 
-        // Delay and navigate to the main activity
-        new Handler().postDelayed(() -> {
-            SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-            boolean isOnboardingCompleted = prefs.getBoolean(KEY_ONBOARDING_COMPLETED, false);
-            Intent intent;
+        String url = GetDriverDocument + "/" + driverId;
+
+        JsonArrayRequest request = new JsonArrayRequest(
+                Request.Method.GET,
+                url,
+                null,
+                response -> {
+                    try {
+                        int statusId = 0;
+                        String status="";
+
+                        if (response.length() > 0) {
+                            JSONObject obj = response.getJSONObject(0);
+                            statusId = obj.optInt("StatusId", 0);
+                            status = obj.optString("PaymentStatus","");
+                        }
+
+                        if (status.equalsIgnoreCase("captured")) {
+                            // Payment success → go to Home screen
+                            startActivity(new Intent(this, HomeActivity.class));
+                            finish();
+                        }
+                        else {
 
 
-                intent = new Intent(SplashActivity.this, OnboardingActivity.class);
+                            Log.d(TAG, "StatusId = " + statusId);
 
-            startActivity(intent);
-            finish(); // Close the splash activity so it's not in the back stack
-            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out); // Smooth transition
-        }, SPLASH_DURATION);
+                            switch (statusId) {
+                                case 5:   // GO TO PAYMENT
+                                    navigate(PaymentActivity.class);
+                                    break;
+
+                                case 2:   // GO TO DOCUMENT UPLOAD
+                                    navigate(DocumentUploadActivity.class);
+                                    break;
+
+                                case 0:
+                                case 1:
+                                case 3:
+                                default:
+                                    // ALWAYS go to VerificationCheckActivity
+                                    navigate(VerificationCheckActivity.class);
+                                    break;
+                            }
+                        }
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        navigate(VerificationCheckActivity.class);
+                    }
+                },
+                error -> {
+                    //Toast.makeText(this, "Network error", Toast.LENGTH_LONG).show();
+                    navigate(VerificationCheckActivity.class);
+                }
+        );
+
+        Volley.newRequestQueue(this).add(request);
+    }
+
+    private void navigate(Class<?> cls) {
+        Intent intent = new Intent(this, cls);
+        startActivity(intent);
+        finish();
     }
 }

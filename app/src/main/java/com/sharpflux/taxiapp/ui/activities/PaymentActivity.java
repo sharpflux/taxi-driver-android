@@ -1,19 +1,28 @@
 package com.sharpflux.taxiapp.ui.activities;
 
+import static com.sharpflux.taxiapp.data.network.APIs.GetPaymentdetails;
+
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowInsets;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.material.button.MaterialButton;
@@ -49,17 +58,55 @@ public class PaymentActivity extends AppCompatActivity implements PaymentResultW
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_payment);
 
+        //notification bar
+        Window window = getWindow();
+        if ((getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK)
+                == Configuration.UI_MODE_NIGHT_YES) {
+            // Dark mode
+            window.setStatusBarColor(ContextCompat.getColor(this, R.color.black));
+            window.getDecorView().setSystemUiVisibility(0); // remove light icons flag
+        } else {
+            // Light mode
+            window.setStatusBarColor(ContextCompat.getColor(this, R.color.white));
+            window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+        }
+        //layout
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+            getWindow().getDecorView().setOnApplyWindowInsetsListener((v, insets) -> {
+                int topInset = insets.getInsets(WindowInsets.Type.statusBars()).top;
+                v.setPadding(0, topInset, 0, 0);
+                return insets;
+            });
+        } else {
+            getWindow().getDecorView().setOnApplyWindowInsetsListener((v, insets) -> {
+                int topInset = insets.getSystemWindowInsetTop();
+                v.setPadding(0, topInset, 0, 0);
+                return insets.consumeSystemWindowInsets();
+            });
+        }
         // Initialize Razorpay
         Checkout.preload(getApplicationContext());
 
         // Initialize views
         initViews();
 
+        ImageView btnBack = findViewById(R.id.btnBack);
+
+        btnBack.setOnClickListener(v -> {
+            Intent i = new Intent(PaymentActivity.this, PhoneLoginActivity.class);
+            i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(i);
+            finish();
+        });
+
+
         // Initialize Volley
         requestQueue = Volley.newRequestQueue(this);
 
         // Set up click listener
         btnProceedPayment.setOnClickListener(v -> validateAndInitiatePayment());
+
+        checkPaymentStatus();
     }
 
     private void initViews() {
@@ -347,6 +394,11 @@ public class PaymentActivity extends AppCompatActivity implements PaymentResultW
                                     // Handle successful verification logic
                                 }
 
+                                Intent intent = new Intent(this, HomeActivity.class);
+                                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                                startActivity(intent);
+                                finish();
+
                             } else {
                                 Toast.makeText(this, "⚠ " + message, Toast.LENGTH_LONG).show();
                             }
@@ -414,6 +466,61 @@ public class PaymentActivity extends AppCompatActivity implements PaymentResultW
 
         Toast.makeText(this, message, Toast.LENGTH_LONG).show();
     }
+
+    private void checkPaymentStatus() {
+
+        SharedPreferences prefs = getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
+        int driverId = prefs.getInt("user_id", 0);
+
+        String url = GetPaymentdetails + driverId;
+
+        RequestQueue queue = Volley.newRequestQueue(this);
+
+        JsonArrayRequest request = new JsonArrayRequest(
+                Request.Method.GET,
+                url,
+                null,
+                response -> {
+                    try {
+                        if (response.length() > 0) {
+
+                            JSONObject obj = response.getJSONObject(0);
+                            String status = obj.getString("Status");
+
+                            Log.d("PAYMENT_STATUS", "Status: " + status);
+
+                            // IMPORTANT: Make lowercase comparison
+                            if (status.equalsIgnoreCase("captured")) {
+
+                                Toast.makeText(this, "Payment successful!", Toast.LENGTH_SHORT).show();
+
+                                // Redirect automatically
+                                Intent i = new Intent(this, HomeActivity.class);
+                                i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                                startActivity(i);
+                                finish();
+                            }
+                            else {
+                                Toast.makeText(this, "Payment pending. Please complete payment.", Toast.LENGTH_SHORT).show();
+                            }
+
+                        } else {
+                            Toast.makeText(this, "No payment found. Please make a payment.", Toast.LENGTH_SHORT).show();
+                        }
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                },
+                error -> {
+                    Log.e("PAYMENT_STATUS", "Error fetching payment", error);
+                    Toast.makeText(this, "Error checking payment status", Toast.LENGTH_LONG).show();
+                }
+        );
+
+        queue.add(request);
+    }
+
 
     @Override
     protected void onDestroy() {

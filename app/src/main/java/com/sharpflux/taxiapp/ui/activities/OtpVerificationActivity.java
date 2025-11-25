@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
@@ -12,6 +13,8 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowInsets;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -20,11 +23,13 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.gms.auth.api.phone.SmsRetriever;
@@ -72,6 +77,33 @@ public class OtpVerificationActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_otpverification);
+
+        //notification bar
+        Window window = getWindow();
+        if ((getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK)
+                == Configuration.UI_MODE_NIGHT_YES) {
+            // Dark mode
+            window.setStatusBarColor(ContextCompat.getColor(this, R.color.black));
+            window.getDecorView().setSystemUiVisibility(0); // remove light icons flag
+        } else {
+            // Light mode
+            window.setStatusBarColor(ContextCompat.getColor(this, R.color.white));
+            window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+        }
+        //layout
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+            getWindow().getDecorView().setOnApplyWindowInsetsListener((v, insets) -> {
+                int topInset = insets.getInsets(WindowInsets.Type.statusBars()).top;
+                v.setPadding(0, topInset, 0, 0);
+                return insets;
+            });
+        } else {
+            getWindow().getDecorView().setOnApplyWindowInsetsListener((v, insets) -> {
+                int topInset = insets.getSystemWindowInsetTop();
+                v.setPadding(0, topInset, 0, 0);
+                return insets.consumeSystemWindowInsets();
+            });
+        }
 
 //        // In onCreate() - Run this once to get your hash
 //        AppSignatureHelper appSignatureHelper = new AppSignatureHelper(this);
@@ -424,15 +456,69 @@ public class OtpVerificationActivity extends AppCompatActivity {
 
                                 switch (status) {
                                     case "Verified":
-                                        // User exists - Save data and redirect to Home
+                                        // Save user session
                                         saveUserSession(response);
 
                                         Toast.makeText(OtpVerificationActivity.this,
                                                 "Login successful", Toast.LENGTH_SHORT).show();
 
-                                        Intent homeIntent = new Intent(OtpVerificationActivity.this, VerificationCheckActivity.class);
-                                        startActivity(homeIntent);
-                                        finish();
+                                        // Get saved driverId
+                                        SharedPreferences prefs = getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
+                                        int driverId = prefs.getInt("user_id", 0);
+
+                                        if (driverId == 0) {
+                                            Intent homeIntent = new Intent(OtpVerificationActivity.this, OnboardingActivity.class);
+                                            startActivity(homeIntent);
+                                            finish();
+                                            break;
+                                        }
+
+                                        // API: GET /GetDriverDocument/{driverId}
+                                        String url = APIs.GetDriverDocument + "/" + driverId;
+                                        Log.d("CHECK_API_URL", url);  // <--- Add this for debugging
+
+                                        JsonArrayRequest docRequest = new JsonArrayRequest(
+                                                Request.Method.GET,
+                                                url,
+                                                null,
+                                                docResponse -> {
+                                                    try {
+                                                        int statusId = 0;
+                                                        String paymentStatus = "";
+
+                                                        if (docResponse.length() > 0) {
+                                                            JSONObject obj = docResponse.getJSONObject(0);
+                                                            statusId = obj.optInt("StatusId", 0);
+                                                            paymentStatus = obj.optString("PaymentStatus", "");
+                                                        }
+
+                                                        if (paymentStatus.equalsIgnoreCase("captured")) {
+                                                            Intent homeIntent = new Intent(OtpVerificationActivity.this, HomeActivity.class);
+                                                            startActivity(homeIntent);
+                                                            finish();
+                                                        } else {
+                                                            switch (statusId) {
+                                                                case 5:
+                                                                    startActivity(new Intent(OtpVerificationActivity.this, PaymentActivity.class));
+                                                                    break;
+                                                                case 2:
+                                                                    startActivity(new Intent(OtpVerificationActivity.this, DocumentUploadActivity.class));
+                                                                    break;
+                                                                default:
+                                                                    startActivity(new Intent(OtpVerificationActivity.this, VerificationCheckActivity.class));
+                                                                    break;
+                                                            }
+                                                        }
+
+                                                    } catch (Exception ex) {
+                                                        ex.printStackTrace();
+                                                        startActivity(new Intent(OtpVerificationActivity.this, VerificationCheckActivity.class));
+                                                    }
+                                                },
+                                                error -> startActivity(new Intent(OtpVerificationActivity.this, VerificationCheckActivity.class))
+                                        );
+
+                                        Volley.newRequestQueue(OtpVerificationActivity.this).add(docRequest);
                                         break;
 
                                     case "Verified_But_No_Driver":

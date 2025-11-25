@@ -1,16 +1,20 @@
 package com.sharpflux.taxiapp.ui.activities;
 
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
+import android.view.View;
+import android.view.Window;
 import android.view.WindowInsets;
 import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.sharpflux.taxiapp.R;
@@ -35,6 +39,19 @@ public class QRActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_qr);
 
+        //notification bar
+        Window window = getWindow();
+        if ((getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK)
+                == Configuration.UI_MODE_NIGHT_YES) {
+            // Dark mode
+            window.setStatusBarColor(ContextCompat.getColor(this, R.color.black));
+            window.getDecorView().setSystemUiVisibility(0); // remove light icons flag
+        } else {
+            // Light mode
+            window.setStatusBarColor(ContextCompat.getColor(this, R.color.white));
+            window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+        }
+        //layout
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
             getWindow().getDecorView().setOnApplyWindowInsetsListener((v, insets) -> {
                 int topInset = insets.getInsets(WindowInsets.Type.statusBars()).top;
@@ -94,7 +111,7 @@ public class QRActivity extends AppCompatActivity {
                 finish();
                 return true;
             } else if (id == R.id.nav_settings) {
-                startActivity(new Intent(QRActivity.this, BillRequestActivity.class));
+                startActivity(new Intent(QRActivity.this, RidesActivity.class));
                 overridePendingTransition(0, 0);
                 finish();
                 return true;

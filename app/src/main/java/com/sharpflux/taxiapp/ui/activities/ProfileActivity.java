@@ -3,10 +3,13 @@ package com.sharpflux.taxiapp.ui.activities;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.util.Base64;
+import android.view.View;
+import android.view.Window;
 import android.view.WindowInsets;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -14,6 +17,8 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
+
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.sharpflux.taxiapp.R;
 import com.sharpflux.taxiapp.utils.SessionManager;
@@ -31,6 +36,20 @@ public class ProfileActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile);
 
+        //notification bar
+        Window window = getWindow();
+        if ((getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK)
+                == Configuration.UI_MODE_NIGHT_YES) {
+            // Dark mode
+            window.setStatusBarColor(ContextCompat.getColor(this, R.color.black));
+            window.getDecorView().setSystemUiVisibility(0); // remove light icons flag
+        } else {
+            // Light mode
+            window.setStatusBarColor(ContextCompat.getColor(this, R.color.white));
+            window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+        }
+
+        //Layout
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
             getWindow().getDecorView().setOnApplyWindowInsetsListener((v, insets) -> {
                 int topInset = insets.getInsets(WindowInsets.Type.statusBars()).top;
@@ -101,14 +120,14 @@ public class ProfileActivity extends AppCompatActivity {
 
         llHelpSupport.setOnClickListener(v -> {
             // Navigate to Help & Support screen
-            // Intent intent = new Intent(this, HelpSupportActivity.class);
-            // startActivity(intent);
+             Intent intent = new Intent(this, HelpSupportActivity.class);
+             startActivity(intent);
         });
 
         llSettings.setOnClickListener(v -> {
             // Navigate to Settings screen
-            // Intent intent = new Intent(this, SettingsActivity.class);
-            // startActivity(intent);
+             Intent intent = new Intent(this, SettingsActivity.class);
+             startActivity(intent);
         });
 
         llLogout.setOnClickListener(v -> showLogoutDialog());
@@ -133,7 +152,7 @@ public class ProfileActivity extends AppCompatActivity {
             } else if (id == R.id.nav_profile) {
                 return true;
             } else if (id == R.id.nav_settings) {
-                startActivity(new Intent(ProfileActivity.this, BillRequestActivity.class));
+                startActivity(new Intent(ProfileActivity.this, RidesActivity.class));
                 overridePendingTransition(0, 0);
                 finish();
                 return true;

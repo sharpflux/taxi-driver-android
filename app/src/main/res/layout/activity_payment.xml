@@ -13,6 +13,17 @@
         android:orientation="vertical"
         android:padding="16dp">
 
+        <ImageView
+            android:id="@+id/btnBack"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_margin="16dp"
+            android:src="@drawable/ic_arrow_back"
+            android:contentDescription="Back"
+            android:clickable="true"
+            android:focusable="true" />
+
+
         <!-- Header Card -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"

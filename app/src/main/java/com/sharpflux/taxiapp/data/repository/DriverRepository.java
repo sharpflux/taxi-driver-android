@@ -163,7 +163,7 @@ public class DriverRepository {
             // Meta & Flags
             params.put("roleId", data.getRoleId());
             params.put("isVerified", data.isVerified());
-            params.put("statusId", data.getVerificationStatus()); // Note: API uses "statusId" not "verificationStatus"
+            params.put("statusId", 1);
             params.put("verificationDate", convertToISODateTime(new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new Date())));
             params.put("verifiedBy", data.getVerifiedBy());
             params.put("createdBy", 0);
@@ -398,26 +398,34 @@ public class DriverRepository {
         SharedPreferences prefs = context.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
         driversId = prefs.getInt("user_id", 0);
 
-        String url = APIs.GetDriversURL + driversId;
-        Log.d(TAG, "Fetching driver: " + url);
-
         if (driversId <= 0) {
             callback.onError("Invalid driver ID");
             return;
         }
 
-        JsonObjectRequest request = new JsonObjectRequest(
+        String url = APIs.GetDriversURL
+                + "?startIndex=1"
+                + "&pageSize=10"
+                + "&searchBy=0"
+                + "&searchCriteria=0"
+                + "&DriverId=" + driversId;
+
+        Log.d(TAG, "Fetching driver: " + url);
+
+        JsonArrayRequest request = new JsonArrayRequest(
                 Request.Method.GET,
                 url,
                 null,
                 response -> {
                     try {
                         List<Driver> drivers = new ArrayList<>();
-                        Driver driver = parseDriver(response);
-                        drivers.add(driver);
+                        if (response.length() > 0) {
+                            JSONObject obj = response.getJSONObject(0);
+                            drivers.add(parseDriver(obj));
+                        }
                         callback.onSuccess(drivers);
                     } catch (Exception e) {
-                        callback.onError("Error parsing data: " + e.getMessage());
+                        callback.onError("Parsing error: " + e.getMessage());
                     }
                 },
                 error -> callback.onError(parseVolleyError(error))
@@ -426,34 +434,61 @@ public class DriverRepository {
         VolleyClient.getInstance(context).addToRequestQueue(request);
     }
 
+
     public void getDriverById(int driverId, DriverCallback callback) {
         getDrivers(driverId, callback);
     }
 
     private Driver parseDriver(JSONObject obj) throws Exception {
+        Log.d(TAG, "=== PARSING DRIVER START ===");
+        Log.d(TAG, "JSON Object: " + obj.toString());
+
         Driver driver = new Driver();
-        driver.setDriverId(obj.optInt("driversId", 0));
-        driver.setDriverCode(obj.optString("driverCode", ""));
-        driver.setFirstName(obj.optString("firstName", ""));
-        driver.setMiddleName(obj.optString("middleName", ""));
-        driver.setLastName(obj.optString("lastName", ""));
-        driver.setEmailId(obj.optString("emailId", ""));
-        driver.setPhoneNumber(obj.optString("phoneNumber", ""));
-        driver.setAddress(obj.optString("address", ""));
-        driver.setCityId(obj.optInt("cityId", 0));
-        driver.setStateId(obj.optInt("stateId", 0));
-        driver.setGenderId(obj.optInt("genderId", 0));
-        driver.setIsActive(obj.optBoolean("isActive", true));
-        driver.setAadharNumber(obj.optString("aadharNumber", ""));
-        driver.setInsuranceValidTo(obj.optString("insuranceValidTo", null));
-        driver.setVehicleTypeId(obj.optInt("vehicleTypeId", 0));
-        driver.setVehicleNumber(obj.optString("vehicleNumber", ""));
-        driver.setLanguageId(obj.optInt("languageId", 0));
-        driver.setRejectionReason(obj.optString("rejectionReason", ""));
-        driver.setVerified(obj.optBoolean("isVerified", false));
-        driver.setVerificationStatus(obj.optInt("statusId", 0));
-        driver.setVerifiedBy(obj.optInt("verifiedBy", 0));
-        driver.setRoleId(obj.optInt("roleId", 0));
+
+        // Parse with EXACT field names from API (Capital case)
+        driver.setDriverId(obj.optInt("DriverId", 0));
+        Log.d(TAG, "DriverId: " + driver.getDriverId());
+
+        driver.setDriverCode(obj.optString("DriverCode", ""));
+        Log.d(TAG, "DriverCode: " + driver.getDriverCode());
+
+        driver.setFirstName(obj.optString("FirstName", ""));
+        Log.d(TAG, "FirstName: " + driver.getFirstName());
+
+        driver.setMiddleName(obj.optString("MiddleName", ""));
+        driver.setLastName(obj.optString("LastName", ""));
+        Log.d(TAG, "LastName: " + driver.getLastName());
+
+        driver.setEmailId(obj.optString("EmailId", ""));
+        Log.d(TAG, "EmailId: " + driver.getEmailId());
+
+        driver.setPhoneNumber(obj.optString("PhoneNumber", ""));
+        Log.d(TAG, "PhoneNumber: " + driver.getPhoneNumber());
+
+        driver.setAddress(obj.optString("Address", ""));
+
+        driver.setCityId(obj.optInt("CityId", 0));
+        Log.d(TAG, "CityId: " + driver.getCityId());
+
+        driver.setStateId(obj.optInt("StateId", 0));
+        Log.d(TAG, "StateId: " + driver.getStateId());
+
+        driver.setAddress(obj.optString("Address",""));
+        driver.setGenderId(obj.optInt("GenderId", 0));
+        driver.setLocationId(obj.optInt("LocationId", 0));
+        driver.setIsActive(obj.optBoolean("IsActive", true));
+        driver.setAadharNumber(obj.optString("AadharNumber", ""));
+        driver.setInsuranceValidTo(obj.optString("InsuranceValidTo", null));
+        driver.setVehicleTypeId(obj.optInt("VehicleTypeId", 0));
+        driver.setVehicleNumber(obj.optString("VehicleNumber", ""));
+        driver.setLanguageId(obj.optInt("LanguageId", 0));
+        driver.setRejectionReason(obj.optString("RejectionReason", ""));
+        driver.setVerified(obj.optBoolean("IsVerified", false));
+        driver.setStatusId(obj.optInt("StatusId", 0));
+        driver.setVerifiedBy(obj.optInt("VerifiedBy", 0));
+        driver.setRoleId(obj.optInt("RoleId", 0));
+
+        Log.d(TAG, "=== PARSING DRIVER END ===");
         return driver;
     }
 

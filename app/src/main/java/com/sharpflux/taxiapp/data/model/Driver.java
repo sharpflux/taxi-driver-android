@@ -360,6 +360,7 @@ public class Driver {
                 ", languageId=" + languageId +
                 ", roleId=" + roleId +
                 ", isVerified=" + isVerified +
+                ",statusId=" + statusId +
                 ", verificationStatus=" + verificationStatus +
                 ", isActive=" + isActive +
                 '}';

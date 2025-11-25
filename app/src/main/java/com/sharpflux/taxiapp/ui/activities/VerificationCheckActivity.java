@@ -2,55 +2,133 @@ package com.sharpflux.taxiapp.ui.activities;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+import android.view.Window;
+import android.view.WindowInsets;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.Volley;
 import com.sharpflux.taxiapp.R;
+import com.sharpflux.taxiapp.data.network.APIs;
+
+import org.json.JSONObject;
 
 public class VerificationCheckActivity extends AppCompatActivity {
+
+    private static final String TAG = "VerificationCheck";
+    String url = APIs.GetDriverDocument;   // your API base URL
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_verification_pending);
+
+        //notification bar
+        Window window = getWindow();
+        if ((getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK)
+                == Configuration.UI_MODE_NIGHT_YES) {
+            // Dark mode
+            window.setStatusBarColor(ContextCompat.getColor(this, R.color.black));
+            window.getDecorView().setSystemUiVisibility(0); // remove light icons flag
+        } else {
+            // Light mode
+            window.setStatusBarColor(ContextCompat.getColor(this, R.color.white));
+            window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+        }
+        //layout
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+            getWindow().getDecorView().setOnApplyWindowInsetsListener((v, insets) -> {
+                int topInset = insets.getInsets(WindowInsets.Type.statusBars()).top;
+                v.setPadding(0, topInset, 0, 0);
+                return insets;
+            });
+        } else {
+            getWindow().getDecorView().setOnApplyWindowInsetsListener((v, insets) -> {
+                int topInset = insets.getSystemWindowInsetTop();
+                v.setPadding(0, topInset, 0, 0);
+                return insets.consumeSystemWindowInsets();
+            });
+        }
+
+        findViewById(R.id.btnRefresh).setOnClickListener(v -> {
+            checkVerificationStatus();
+        });
+
+        // Call once when activity opens
+        checkVerificationStatus();
+    }
+
+    private void checkVerificationStatus() {
 
         SharedPreferences prefs = getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
-        int verificationStatus = prefs.getInt("verificationStatus", 1);
-//        int verificationStatus = 1;
+        int driverId = prefs.getInt("user_id", 0);
 
-        // If verified → go directly to Home
-        if (verificationStatus == 5) {
-            Intent intent = new Intent(VerificationCheckActivity.this, HomeActivity.class);
-            startActivity(intent);
-            finish();
+        if (driverId == 0) {
+            Toast.makeText(this, "User not logged in", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // Else show verification pending screen
-        setContentView(R.layout.activity_verification_pending);
+        String apiUrl = url +"/" + driverId;
+        RequestQueue queue = Volley.newRequestQueue(this);
 
-        findViewById(R.id.btnRefresh).setOnClickListener(v -> {
+        JsonArrayRequest request = new JsonArrayRequest(
+                Request.Method.GET,
+                apiUrl,
+                null,
+                response -> {
+                    try {
 
+                        if (response.length() == 0) {
+                            Toast.makeText(this, "No payment data found", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
 
-            if (verificationStatus == 5) {
-                startActivity(new Intent(this, HomeActivity.class));
-                finish();
-            } else {
-                Toast.makeText(this, "Verification still pending...", Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
+                        JSONObject obj = response.getJSONObject(0);
+                        int statusId = obj.optInt("StatusId", 0);
 
-    private void checkAgain() {
-        SharedPreferences prefs = getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
-        int verificationStatus = prefs.getInt("verificationStatus", 1);
+                        Log.d(TAG, "Verification StatusId: " + statusId);
 
-        if (verificationStatus == 5) {
-            startActivity(new Intent(this, HomeActivity.class));
-            finish();
-        } else {
-            Toast.makeText(this, "Verification pending...", Toast.LENGTH_SHORT).show();
-        }
+                        switch (statusId) {
+
+                            case 5: // Payment Pending
+                                startActivity(new Intent(this, PaymentActivity.class));
+                                finish();
+                                break;
+
+                            case 2: // Document upload pending
+                                startActivity(new Intent(this, DocumentUploadActivity.class));
+                                finish();
+                                break;
+
+                            case 6: // Verified / Payment Captured
+                                startActivity(new Intent(this, HomeActivity.class));
+                                finish();
+                                break;
+
+                            default:
+                                // Still pending → stay on this screen
+                                Toast.makeText(this, "Verification still pending...", Toast.LENGTH_SHORT).show();
+                                break;
+                        }
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                },
+                error -> {
+                    Toast.makeText(this, "Error checking status", Toast.LENGTH_SHORT).show();
+                }
+        );
+
+        queue.add(request);
     }
 }

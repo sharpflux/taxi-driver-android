@@ -42,6 +42,7 @@
     <style name="Theme.TaxiApp.NoActionBar" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
+        <item name="android:windowSoftInputMode">adjustResize</item>
 
         <!-- Custom theme attributes for light mode -->
         <item name="background_color">@color/white</item>

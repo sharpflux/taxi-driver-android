@@ -5,7 +5,7 @@
     android:id="@+id/root_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F8FAFD">
+    android:background="?attr/background_color">
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
@@ -32,7 +32,7 @@
                     android:id="@+id/txtGreeting"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Good Morning"
+                    android:text="@string/good_morning"
                     android:textColor="#B3FFFFFF"
                     android:textSize="14sp"
                     android:layout_marginBottom="4dp" />
@@ -41,7 +41,7 @@
                     android:id="@+id/txtWelcome"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Welcome back, John 👋"
+                    android:text="@string/welcome_back"
                     android:textColor="#FFFFFF"
                     android:textSize="26sp"
                     android:textStyle="bold" />
@@ -61,7 +61,7 @@
                         android:layout_weight="1"
                         app:cardCornerRadius="12dp"
                         app:cardElevation="0dp"
-                        android:backgroundTint="#1AFFFFFF"
+                        app:cardBackgroundColor="#1AFFFFFF"
                         android:layout_marginEnd="8dp">
 
                         <LinearLayout
@@ -71,9 +71,10 @@
                             android:gravity="center">
 
                             <TextView
+                                android:id="@+id/tvEarnings"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="₹1,240"
+                                android:text="@string/default_earnings"
                                 android:textSize="18sp"
                                 android:textStyle="bold"
                                 android:textColor="#FFFFFF" />
@@ -81,7 +82,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Earnings"
+                                android:text="@string/earnings"
                                 android:textSize="13sp"
                                 android:textColor="#E6FFFFFF" />
                         </LinearLayout>
@@ -94,7 +95,7 @@
                         android:layout_weight="1"
                         app:cardCornerRadius="12dp"
                         app:cardElevation="0dp"
-                        android:backgroundTint="#1AFFFFFF"
+                        app:cardBackgroundColor="#1AFFFFFF"
                         android:layout_marginStart="8dp"
                         android:layout_marginEnd="8dp">
 
@@ -105,9 +106,10 @@
                             android:gravity="center">
 
                             <TextView
+                                android:id="@+id/tvTrips"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="8"
+                                android:text="@string/default_trips"
                                 android:textSize="18sp"
                                 android:textStyle="bold"
                                 android:textColor="#FFFFFF" />
@@ -115,7 +117,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Trips"
+                                android:text="@string/trips"
                                 android:textSize="13sp"
                                 android:textColor="#E6FFFFFF" />
                         </LinearLayout>
@@ -128,7 +130,7 @@
                         android:layout_weight="1"
                         app:cardCornerRadius="12dp"
                         app:cardElevation="0dp"
-                        android:backgroundTint="#1AFFFFFF"
+                        app:cardBackgroundColor="#1AFFFFFF"
                         android:layout_marginStart="8dp">
 
                         <LinearLayout
@@ -138,9 +140,10 @@
                             android:gravity="center">
 
                             <TextView
+                                android:id="@+id/tvRating"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="4.9★"
+                                android:text="@string/default_rating"
                                 android:textSize="18sp"
                                 android:textStyle="bold"
                                 android:textColor="#FFFFFF" />
@@ -148,7 +151,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Rating"
+                                android:text="@string/rating"
                                 android:textSize="13sp"
                                 android:textColor="#E6FFFFFF" />
                         </LinearLayout>
@@ -161,10 +164,10 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Quick Actions"
+                android:text="@string/quick_actions"
                 android:textSize="18sp"
                 android:textStyle="bold"
-                android:textColor="#1A1A1A"
+                android:textColor="?attr/text_primary_color"
                 android:layout_margin="20dp" />
 
             <!-- Scan QR Card -->
@@ -177,6 +180,7 @@
                 android:layout_marginBottom="20dp"
                 app:cardCornerRadius="16dp"
                 app:cardElevation="3dp"
+                app:cardBackgroundColor="?attr/surface_background_color"
                 android:clickable="true"
                 android:focusable="true"
                 android:foreground="?android:attr/selectableItemBackground">
@@ -192,8 +196,8 @@
                         android:layout_width="60dp"
                         android:layout_height="60dp"
                         android:src="@drawable/ic_qrcode"
-                        android:contentDescription="Scan QR"
-                        app:tint="#000000" />
+                        android:contentDescription="@string/scan_qr"
+                        app:tint="?attr/icon_tint_color" />
 
                     <LinearLayout
                         android:layout_width="wrap_content"
@@ -204,17 +208,17 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Scan this QR Code"
+                            android:text="@string/scan_qr_title"
                             android:textSize="18sp"
                             android:textStyle="bold"
-                            android:textColor="#1A1A1A" />
+                            android:textColor="?attr/text_primary_color" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Tap to scan and start your next ride"
+                            android:text="@string/scan_qr_subtitle"
                             android:textSize="14sp"
-                            android:textColor="#757575" />
+                            android:textColor="?attr/text_secondary_color" />
                     </LinearLayout>
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
@@ -228,7 +232,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:background="#FFFFFF"
+        android:background="?attr/surface_background_color"
         app:elevation="10dp"
         app:itemIconTint="@color/bottom_nav_color"
         app:itemTextColor="@color/bottom_nav_color"

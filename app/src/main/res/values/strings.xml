@@ -1,5 +1,128 @@
 <resources>
-    <string name="app_name">TaxiApp</string>
+    <string name="app_name">Logo Mobility</string>
     <string name="onboarding_image">Onboarding Image</string>
 <!--    <string name="onboarding_image">Onboarding illustration</string>-->
+    <!-- Settings -->
+    <string name="settings">Settings</string>
+    <string name="appearance">Appearance</string>
+    <string name="choose_your_theme">Choose your theme</string>
+    <string name="back_button">Back button</string>
+    <string name="dark_mode">Dark Mode</string>
+    <string name="light_mode">Light Mode</string>
+
+    <!-- Help & Support -->
+    <string name="help_support">Help &amp; Support</string>
+    <string name="help_description">If you need any assistance or have questions,\nplease contact our support team below.</string>
+    <string name="visit_support_website">Visit Support Website</string>
+    <string name="link_icon">Link icon</string>
+
+    <string name="back">Back</string>
+    <string name="my_qr_code">My QR Code</string>
+    <string name="qr_code">QR Code</string>
+    <string name="scan_qr_hint">Scan this QR Code to generate bill</string>
+
+    <!-- Dashboard strings -->
+    <string name="good_morning">Good Morning</string>
+    <string name="welcome_back">Welcome back, John 👋</string>
+    <string name="default_earnings">₹1,240</string>
+    <string name="earnings">Earnings</string>
+    <string name="default_trips">8</string>
+    <string name="trips">Trips</string>
+    <string name="default_rating">4.9★</string>
+    <string name="rating">Rating</string>
+    <string name="quick_actions">Quick Actions</string>
+    <string name="scan_qr">Scan QR</string>
+    <string name="scan_qr_title">Scan this QR Code</string>
+    <string name="scan_qr_subtitle">Tap to scan and start your next ride</string>
+    <!-- Driver Registration Strings -->
+    <string name="driver_registration">Driver Registration</string>
+    <string name="personal_information">Personal Information</string>
+    <string name="first_name_required">First Name *</string>
+    <string name="middle_name_optional">Middle Name (Optional)</string>
+    <string name="last_name_required">Last Name *</string>
+    <string name="email_required">Email *</string>
+    <string name="phone_required">Phone Number *</string>
+    <string name="aadhar_required">Aadhar Number *</string>
+    <string name="gender_required">Gender *</string>
+    <string name="male">Male</string>
+    <string name="female">Female</string>
+    <string name="password_required">Password *</string>
+    <string name="next_arrow">Next →</string>
+    <string name="back_arrow">← Back</string>
+
+    <!-- Address Information -->
+    <string name="address_information">Address Information</string>
+    <string name="street_address_required">Street Address *</string>
+    <string name="select_state_required">Select State *</string>
+    <string name="select_city_required">Select City *</string>
+
+    <!-- Vehicle Information -->
+    <string name="vehicle_information">Vehicle Information</string>
+    <string name="vehicle_number_required">Vehicle Number *</string>
+    <string name="select_vehicle_type_required">Select Vehicle Type *</string>
+    <string name="document_validity">Document Validity</string>
+    <string name="dl_valid_to_required">Driving License Valid To *</string>
+    <string name="insurance_valid_to_required">Insurance Valid To *</string>
+
+    <!-- Upload Documents -->
+    <string name="upload_documents">Upload Documents</string>
+    <string name="upload_documents_subtitle">Please upload all required documents</string>
+    <string name="language_preferences">Language Preferences</string>
+    <string name="select_language_required">Select Language *</string>
+    <string name="can_speak_english">I can speak English</string>
+    <string name="can_understand_english">I can understand English</string>
+    <string name="agree_terms_conditions">I agree to the Terms and Conditions</string>
+    <string name="register_as_driver">Register as Driver</string>
+
+    <!-- Terms and Conditions Dialog -->
+    <string name="terms_and_conditions">Terms and Conditions</string>
+    <string name="i_agree_terms">I agree to the Terms and Conditions</string>
+    <string name="cancel">Cancel</string>
+    <string name="accept">Accept</string>
+    <string name="view_terms_conditions">View Terms and Conditions</string>
+    <string name="please_accept_terms">Please accept the Terms and Conditions to proceed</string>
+
+    <string name="terms_content">
+        <![CDATA[
+        <b>1. Acceptance of Terms</b>\n\n
+        By registering as a driver, you agree to comply with all terms and conditions set forth by our platform.\n\n
+
+        <b>2. Driver Requirements</b>\n\n
+        • You must possess a valid driving license\n
+        • Your vehicle must have valid insurance\n
+        • You must maintain all documents up to date\n
+        • You must be at least 18 years of age\n\n
+
+        <b>3. Code of Conduct</b>\n\n
+        • Maintain professional behavior with passengers\n
+        • Keep your vehicle clean and well-maintained\n
+        • Follow all traffic rules and regulations\n
+        • Do not discriminate against any passenger\n\n
+
+        <b>4. Document Verification</b>\n\n
+        All uploaded documents will be verified by our team. Providing false information may result in account suspension or legal action.\n\n
+
+        <b>5. Data Privacy</b>\n\n
+        Your personal information will be kept confidential and used only for service-related purposes in accordance with our Privacy Policy.\n\n
+
+        <b>6. Commission and Payments</b>\n\n
+        • Platform commission will be deducted from each ride\n
+        • Payments will be processed within 7 business days\n
+        • You are responsible for any applicable taxes\n\n
+
+        <b>7. Account Suspension</b>\n\n
+        We reserve the right to suspend or terminate your account for violation of these terms or inappropriate conduct.\n\n
+
+        <b>8. Liability</b>\n\n
+        You are responsible for any damages or incidents occurring during rides. Ensure adequate insurance coverage.\n\n
+
+        <b>9. Updates to Terms</b>\n\n
+        We may update these terms periodically. Continued use of the platform constitutes acceptance of updated terms.\n\n
+
+        <b>10. Contact</b>\n\n
+        For any questions or concerns, please contact our support team.\n\n
+
+        By checking the box below, you acknowledge that you have read, understood, and agree to be bound by these Terms and Conditions.
+        ]]>
+    </string>
 </resources>

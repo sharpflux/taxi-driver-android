@@ -29,7 +29,7 @@
         android:layout_height="48dp"
         android:layout_gravity="top|center_horizontal"
         android:layout_marginTop="40dp"
-        android:text="TaxiApp"
+        android:text="LOGO MOBILITY"
         android:textColor="@android:color/white"
         android:textSize="28sp"
         android:textStyle="bold" />
