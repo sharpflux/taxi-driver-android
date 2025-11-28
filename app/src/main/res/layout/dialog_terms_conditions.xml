@@ -60,16 +60,16 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal">
 
-<!--        <Button-->
-<!--            android:id="@+id/btnCancel"-->
-<!--            android:layout_width="0dp"-->
-<!--            android:layout_weight="1"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:layout_marginEnd="8dp"-->
-<!--            android:text="@string/cancel"-->
-<!--            android:textColor="?attr/text_primary_color"-->
-<!--            android:backgroundTint="?attr/text_secondary_color"-->
-<!--            app:cornerRadius="12dp" />-->
+        <Button
+            android:id="@+id/btnCancel"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:text="@string/cancel"
+            android:textColor="?attr/text_primary_color"
+            android:backgroundTint="?attr/text_secondary_color"
+            app:cornerRadius="12dp" />
 
         <Button
             android:id="@+id/btnAccept"

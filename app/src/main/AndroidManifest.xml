@@ -149,5 +149,11 @@
             android:windowSoftInputMode="adjustResize|stateHidden"
             android:theme="@style/Theme.TaxiApp.NoActionBar"/>
 
+        <activity
+            android:name=".ui.activities.PricingPlansActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize|stateHidden"
+            android:theme="@style/Theme.TaxiApp.NoActionBar"/>
+
     </application>
 </manifest>

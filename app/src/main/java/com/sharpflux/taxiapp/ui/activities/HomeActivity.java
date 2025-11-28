@@ -38,7 +38,7 @@ public class HomeActivity extends AppCompatActivity {
     private SignalRManager signalRManager;
     private int driverId;
     private TextView txtWelcome, txtGreeting;
-    private CardView cardScanQR;
+    private CardView cardScanQR,cardProfileIcon, cardNotifications;
     private BottomNavigationView bottomNavigationView;
 
     @Override
@@ -217,6 +217,8 @@ public class HomeActivity extends AppCompatActivity {
         txtGreeting = findViewById(R.id.txtGreeting);
         cardScanQR = findViewById(R.id.cardScanQR);
         bottomNavigationView = findViewById(R.id.bottom_navigation);
+        cardProfileIcon = findViewById(R.id.cardProfileIcon);
+        cardNotifications = findViewById(R.id.cardNotifications);
     }
 
     private void setupGreeting() {
@@ -229,6 +231,17 @@ public class HomeActivity extends AppCompatActivity {
     private void setupClickListeners() {
         cardScanQR.setOnClickListener(v ->
                 startActivity(new Intent(HomeActivity.this, QRActivity.class)));
+        // Profile icon click
+        cardProfileIcon.setOnClickListener(v -> {
+            Intent intent = new Intent(HomeActivity.this, ProfileActivity.class);
+            startActivity(intent);
+        });
+
+        // Notification button click
+        cardNotifications.setOnClickListener(v -> {
+            // TODO: Implement notifications activity/functionality
+            Toast.makeText(this, "Notifications", Toast.LENGTH_SHORT).show();
+        });
     }
 
     private void setupBottomNavigation() {
@@ -237,7 +250,7 @@ public class HomeActivity extends AppCompatActivity {
             int id = item.getItemId();
             if (id == R.id.nav_home) return true;
             if (id == R.id.nav_scanner) {
-                startActivity(new Intent(HomeActivity.this, QRActivity.class));
+                startActivity(new Intent(HomeActivity.this, BillRequestActivity.class));
             } else if (id == R.id.nav_profile) {
                 startActivity(new Intent(HomeActivity.this, ProfileActivity.class));
             } else if (id == R.id.nav_settings) {

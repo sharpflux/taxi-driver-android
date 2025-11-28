@@ -85,7 +85,7 @@ public class RidesActivity extends AppCompatActivity {
                 finish();
                 return true;
             } else if (id == R.id.nav_scanner) {
-                startActivity(new Intent(RidesActivity.this, QRActivity.class));
+                startActivity(new Intent(RidesActivity.this, BillRequestActivity.class));
                 overridePendingTransition(0, 0);
                 finish();
                 return true;

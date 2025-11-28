@@ -2,6 +2,7 @@ package com.sharpflux.taxiapp.ui.activities;
 
 import static com.sharpflux.taxiapp.data.network.APIs.UpdateBillApprovalURL;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
@@ -18,6 +19,7 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.android.volley.Request;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
@@ -52,6 +54,7 @@ public class BillRequestActivity extends AppCompatActivity {
     private ProgressBar progressBar;
     private OnApprovalActionListener approvalActionListener;
     private TextView tvEmptyState;
+    private BottomNavigationView bottomNavigationView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,6 +88,8 @@ public class BillRequestActivity extends AppCompatActivity {
             });
         }
 
+        bottomNavigationView = findViewById(R.id.bottom_navigation);
+        setupBottomNavigation();
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) {
@@ -132,7 +137,7 @@ public class BillRequestActivity extends AppCompatActivity {
             return;
         }
 
-        String url = APIs.GetBillRequestURL + "?customerId=" + customerId;
+        String url = APIs.GetBillRequestURL + "?driverId=" + customerId;
 
         JsonArrayRequest request = new JsonArrayRequest(
                 Request.Method.GET,
@@ -160,6 +165,37 @@ public class BillRequestActivity extends AppCompatActivity {
         VolleyClient.getInstance(this).addToRequestQueue(request);
     }
 
+    protected void onResume() {
+        super.onResume();
+        bottomNavigationView.setSelectedItemId(R.id.nav_scanner);
+    }
+    private void setupBottomNavigation() {
+        bottomNavigationView.setSelectedItemId(R.id.nav_scanner);
+
+        bottomNavigationView.setOnItemSelectedListener(item -> {
+            int id = item.getItemId();
+
+            if (id == R.id.nav_home) {
+                startActivity(new Intent(BillRequestActivity.this, HomeActivity.class));
+                overridePendingTransition(0, 0);
+                finish();
+                return true;
+            } else if (id == R.id.nav_settings) {
+                startActivity(new Intent(BillRequestActivity.this, RidesActivity.class));
+                overridePendingTransition(0, 0);
+                finish();
+                return true;
+            } else if (id == R.id.nav_profile) {
+                startActivity(new Intent(BillRequestActivity.this, ProfileActivity.class));
+                overridePendingTransition(0, 0);
+                finish();
+                return true;
+            } else if (id == R.id.nav_scanner) {
+                return true;
+            }
+            return false;
+        });
+    }
     private void handleResponse(JSONArray response) {
         progressBar.setVisibility(View.GONE);
 
@@ -255,8 +291,8 @@ public class BillRequestActivity extends AppCompatActivity {
         TextView tvDriverTip = dialogView.findViewById(R.id.tvDriverTip);
         TextView tvBillDate = dialogView.findViewById(R.id.tvBillDate);
         TextView tvTotal = dialogView.findViewById(R.id.tvTotal);
-        android.widget.Button btnAccept = dialogView.findViewById(R.id.btnAccept);
-        android.widget.Button btnReject = dialogView.findViewById(R.id.btnReject);
+//        android.widget.Button btnAccept = dialogView.findViewById(R.id.btnAccept);
+//        android.widget.Button btnReject = dialogView.findViewById(R.id.btnReject);
 
         tvRequestId.setText("Request #" + billRequest.getRequestID());
         tvDriverName.setText(billRequest.getDriverName());
@@ -279,15 +315,15 @@ public class BillRequestActivity extends AppCompatActivity {
 
         androidx.appcompat.app.AlertDialog dialog = builder.create();
 
-        btnAccept.setOnClickListener(v -> {
-            updateApprovalStatus(billRequest.getCustomersId(), 1);
-            dialog.dismiss();
-        });
-
-        btnReject.setOnClickListener(v -> {
-            updateApprovalStatus(billRequest.getCustomersId(), 2);
-            dialog.dismiss();
-        });
+//        Accept.setOnClickListener(v -> {
+//            updateApprovalStatus(billRequest.getCustomersId(), 1);
+//            dialog.dismiss();
+//        });
+//
+//        btnReject.setOnClickListener(v -> {
+//            updateApprovalStatus(billRequest.getCustomersId(), 2);
+//            dialog.dismiss();
+//        });btn
 
         dialog.show();
     }

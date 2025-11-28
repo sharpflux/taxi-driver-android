@@ -455,6 +455,7 @@ public class OtpVerificationActivity extends AppCompatActivity {
                                 }
 
                                 switch (status) {
+
                                     case "Verified":
                                         // Save user session
                                         saveUserSession(response);
@@ -467,15 +468,14 @@ public class OtpVerificationActivity extends AppCompatActivity {
                                         int driverId = prefs.getInt("user_id", 0);
 
                                         if (driverId == 0) {
-                                            Intent homeIntent = new Intent(OtpVerificationActivity.this, OnboardingActivity.class);
-                                            startActivity(homeIntent);
+                                            Intent onboarding = new Intent(OtpVerificationActivity.this, OnboardingActivity.class);
+                                            startActivity(onboarding);
                                             finish();
                                             break;
                                         }
 
-                                        // API: GET /GetDriverDocument/{driverId}
                                         String url = APIs.GetDriverDocument + "/" + driverId;
-                                        Log.d("CHECK_API_URL", url);  // <--- Add this for debugging
+                                        Log.d("CHECK_API_URL", url);
 
                                         JsonArrayRequest docRequest = new JsonArrayRequest(
                                                 Request.Method.GET,
@@ -483,46 +483,54 @@ public class OtpVerificationActivity extends AppCompatActivity {
                                                 null,
                                                 docResponse -> {
                                                     try {
-                                                        int statusId = 0;
                                                         String paymentStatus = "";
+                                                        int statusId = 0;
 
                                                         if (docResponse.length() > 0) {
                                                             JSONObject obj = docResponse.getJSONObject(0);
-                                                            statusId = obj.optInt("StatusId", 0);
                                                             paymentStatus = obj.optString("PaymentStatus", "");
+                                                            statusId = obj.optInt("StatusId", 0);
                                                         }
 
+                                                        // Clean string
+                                                        paymentStatus = paymentStatus == null ? "" : paymentStatus.trim();
+                                                        Log.d("PAYMENT_STATUS", "Value = [" + paymentStatus + "]");
+
                                                         if (paymentStatus.equalsIgnoreCase("captured")) {
-                                                            Intent homeIntent = new Intent(OtpVerificationActivity.this, HomeActivity.class);
-                                                            startActivity(homeIntent);
+
+                                                            // Payment done → go to verification check
+                                                            Intent i = new Intent(OtpVerificationActivity.this, VerificationCheckActivity.class);
+                                                            startActivity(i);
                                                             finish();
+                                                            return;
                                                         } else {
-                                                            switch (statusId) {
-                                                                case 5:
-                                                                    startActivity(new Intent(OtpVerificationActivity.this, PaymentActivity.class));
-                                                                    break;
-                                                                case 2:
-                                                                    startActivity(new Intent(OtpVerificationActivity.this, DocumentUploadActivity.class));
-                                                                    break;
-                                                                default:
-                                                                    startActivity(new Intent(OtpVerificationActivity.this, VerificationCheckActivity.class));
-                                                                    break;
-                                                            }
+
+                                                            // Payment NOT done → go to pricing plan
+                                                            Intent i = new Intent(OtpVerificationActivity.this, PricingPlansActivity.class);
+                                                            startActivity(i);
+                                                            finish();
+                                                            return;
                                                         }
 
                                                     } catch (Exception ex) {
                                                         ex.printStackTrace();
+                                                        // On error → take user to verification check
                                                         startActivity(new Intent(OtpVerificationActivity.this, VerificationCheckActivity.class));
+                                                        finish();
                                                     }
                                                 },
-                                                error -> startActivity(new Intent(OtpVerificationActivity.this, VerificationCheckActivity.class))
+                                                error -> {
+                                                    // API error → go to verification check
+                                                    startActivity(new Intent(OtpVerificationActivity.this, VerificationCheckActivity.class));
+                                                    finish();
+                                                }
                                         );
 
                                         Volley.newRequestQueue(OtpVerificationActivity.this).add(docRequest);
                                         break;
 
+
                                     case "Verified_But_No_Driver":
-                                        // New user - redirect to SignUp
                                         Toast.makeText(OtpVerificationActivity.this,
                                                 "Please complete registration", Toast.LENGTH_SHORT).show();
 
@@ -533,12 +541,12 @@ public class OtpVerificationActivity extends AppCompatActivity {
                                         finish();
                                         break;
 
+
                                     default:
                                         Toast.makeText(OtpVerificationActivity.this,
                                                 "Unexpected response. Please try again.", Toast.LENGTH_SHORT).show();
                                         break;
                                 }
-
                             } catch (Exception e) {
                                 e.printStackTrace();
                                 Toast.makeText(OtpVerificationActivity.this,

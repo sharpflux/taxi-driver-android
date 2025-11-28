@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="16dp"
+    android:padding="20dp"
+    app:cardCornerRadius="22dp"
+    app:cardElevation="10dp"
+    app:cardUseCompatPadding="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"> <!-- Center contents -->
+
+        <!-- Discount Badge -->
+        <TextView
+            android:id="@+id/txtDiscount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="6dp"
+            android:layout_marginBottom="10dp"
+            android:textStyle="bold"
+            android:textColor="@android:color/white"
+            android:textSize="13sp"
+            android:background="@drawable/bg_discount"
+            android:text="83% OFF" />
+
+        <!-- Plan Name -->
+        <TextView
+            android:id="@+id/txtPlanName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Single"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp"
+            android:gravity="center" />
+
+        <TextView
+            android:id="@+id/txtOriginalPrice"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="₹150"
+            android:textSize="14sp"
+            android:textColor="#777"
+            android:layout_marginBottom="4dp"
+            android:visibility="gone" />
+
+
+        <!-- Price Row -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginBottom="6dp">
+
+            <TextView
+                android:id="@+id/txtCurrency"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="₹"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="#000"
+                android:layout_marginEnd="2dp" />
+
+            <TextView
+                android:id="@+id/txtDiscountedPrice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="69"
+                android:textSize="28sp"
+                android:textStyle="bold"
+                android:textColor="#000" />
+
+            <TextView
+                android:id="@+id/txtPerMonth"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="/mo"
+                android:textSize="14sp"
+                android:textColor="#777"
+                android:layout_marginStart="5dp" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/txtFreeMonths"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="+ 2 months free"
+            android:textColor="#00A86B"
+            android:textStyle="bold"
+            android:layout_marginBottom="14dp"
+            android:gravity="center" />
+
+        <!-- Features List -->
+        <LinearLayout
+            android:id="@+id/layoutFeatures"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center_horizontal"
+            android:layout_marginBottom="18dp" />
+
+        <!-- Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnChoose"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="CHOOSE PLAN"
+            android:textAllCaps="true"
+            android:paddingVertical="12dp"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

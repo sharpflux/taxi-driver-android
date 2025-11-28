@@ -18,6 +18,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
@@ -43,11 +44,15 @@ public class PaymentActivity extends AppCompatActivity implements PaymentResultW
     private static final String TAG = "PaymentActivity";
 
     // UI Components
-    private EditText etAmount, etName, etEmail, etPhone;  //etUserId
+    private EditText etAmount, etName, etPhone;  //etUserId
     private MaterialButton btnProceedPayment;
     private ProgressBar progressBar;
     private String driverName, driverEmail, driverPhone;
     private int driverId;
+    private SwipeRefreshLayout swipeRefresh;
+    private int selectedPlanId;
+    private double finalAmount;
+
 
 
     // Network
@@ -89,11 +94,19 @@ public class PaymentActivity extends AppCompatActivity implements PaymentResultW
 
         // Initialize views
         initViews();
+        readSelectedPlan();
+
+        swipeRefresh = findViewById(R.id.swipeRefresh);
+
+        swipeRefresh.setOnRefreshListener(() -> {
+            checkPaymentStatus();
+        });
+
 
         ImageView btnBack = findViewById(R.id.btnBack);
 
         btnBack.setOnClickListener(v -> {
-            Intent i = new Intent(PaymentActivity.this, PhoneLoginActivity.class);
+            Intent i = new Intent(PaymentActivity.this, PricingPlansActivity.class);
             i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(i);
             finish();
@@ -112,7 +125,7 @@ public class PaymentActivity extends AppCompatActivity implements PaymentResultW
     private void initViews() {
         etAmount = findViewById(R.id.etAmount);
         etName = findViewById(R.id.etName);
-        etEmail = findViewById(R.id.etEmail);
+        //etEmail = findViewById(R.id.etEmail);
         etPhone = findViewById(R.id.etPhone);
         btnProceedPayment = findViewById(R.id.btnProceedPayment);
         progressBar = findViewById(R.id.progressBar);
@@ -128,14 +141,14 @@ public class PaymentActivity extends AppCompatActivity implements PaymentResultW
 
         // Assign values to EditTexts
         etName.setText(userName);
-        etEmail.setText(userEmail);
+        //etEmail.setText(userEmail);
         etPhone.setText(userPhone);
         etAmount.setText("1"); // default test amount
        // etUserId.setText(userId);
 
 
         etName.setEnabled(false);
-        etEmail.setEnabled(false);
+        //etEmail.setEnabled(false);
         etPhone.setEnabled(false);
         etAmount.setEnabled(false);
 
@@ -146,12 +159,28 @@ public class PaymentActivity extends AppCompatActivity implements PaymentResultW
         Log.d("PaymentActivity", "Prefilled from SharedPref - Name: " + userName + ", Email: " + userEmail + ", Phone: " + userPhone);
     }
 
+    private void readSelectedPlan() {
+        Intent i = getIntent();
 
+        selectedPlanId = i.getIntExtra("planId", 0);
+        String planName = i.getStringExtra("planName");
+        double originalPrice = i.getDoubleExtra("originalPrice", 0.0);
+        double discountedPrice = i.getDoubleExtra("discountedPrice", 0.0);
+        int discountPercent = i.getIntExtra("discountPercent", 0);
+
+        finalAmount = i.getDoubleExtra("finalAmount", 0.0);
+
+        Log.d("PAYMENT_PLAN", "Plan Selected: " + planName);
+        Log.d("PAYMENT_PLAN", "Amount to Pay: " + finalAmount);
+
+        // Show on screen
+        etAmount.setText(String.valueOf(finalAmount));
+    }
     private void validateAndInitiatePayment() {
         // Get input values
         String amountStr = etAmount.getText().toString().trim();
         String name = etName.getText().toString().trim();
-        String email = etEmail.getText().toString().trim();
+        //String email = etEmail.getText().toString().trim();
         String phone = etPhone.getText().toString().trim();
 
         // Validation
@@ -174,17 +203,17 @@ public class PaymentActivity extends AppCompatActivity implements PaymentResultW
             return;
         }
 
-        if (TextUtils.isEmpty(email)) {
-            etEmail.setError("Enter your email");
-            etEmail.requestFocus();
-            return;
-        }
-
-        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            etEmail.setError("Enter valid email");
-            etEmail.requestFocus();
-            return;
-        }
+//        if (TextUtils.isEmpty(email)) {
+//            etEmail.setError("Enter your email");
+//            etEmail.requestFocus();
+//            return;
+//        }
+//
+//        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+//            etEmail.setError("Enter valid email");
+//            etEmail.requestFocus();
+//            return;
+//        }
 
         if (TextUtils.isEmpty(phone) || phone.length() != 10) {
             etPhone.setError("Enter valid 10-digit phone number");
@@ -195,7 +224,7 @@ public class PaymentActivity extends AppCompatActivity implements PaymentResultW
         SharedPreferences prefs = getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
         int userId = prefs.getInt("user_id", 0);
         // All validations passed, proceed with payment
-        createOrderOnServer((int) amount, name, email, phone,userId);
+        createOrderOnServer((int) amount, name, phone,userId,selectedPlanId);
     }
 
     private void showLoading(boolean show) {
@@ -210,7 +239,7 @@ public class PaymentActivity extends AppCompatActivity implements PaymentResultW
     }
 
     private void createOrderOnServer(int amountInRupees, String customerName,
-                                     String customerEmail, String customerContact,int userId) {
+                                      String customerContact,int userId,int selectedPlanId) {
         showLoading(true);
 
         String url = APIs.RazorPayCreateOrder;
@@ -227,6 +256,8 @@ public class PaymentActivity extends AppCompatActivity implements PaymentResultW
                 Log.w(TAG, "⚠ driverId not found in SharedPreferences");
             }
             body.put("driverId", driverId);
+            body.put("planId", selectedPlanId);
+
 
             Log.d(TAG, "Creating order with amount: " + amountInRupees + " for driverId: " + driverId);
 
@@ -245,7 +276,7 @@ public class PaymentActivity extends AppCompatActivity implements PaymentResultW
 
                             // Start Razorpay checkout
                             startPayment(key, orderId, amountPaise, customerName,
-                                    customerEmail, customerContact);
+                                     customerContact);
 
                         } catch (Exception e) {
                             Log.e(TAG, "Error parsing order response", e);
@@ -289,13 +320,10 @@ public class PaymentActivity extends AppCompatActivity implements PaymentResultW
     }
 
     private void startPayment(String key, String orderId, int amountPaise,
-                              String customerName, String customerEmail, String customerContact) {
+                              String customerName, String customerContact) {
         try {
             Checkout checkout = new Checkout();
             checkout.setKeyID(key);
-
-            // Set logo (optional - add your logo in drawable)
-            // checkout.setImage(R.drawable.logo);
 
             JSONObject options = new JSONObject();
             options.put("name", "TaxiApp");
@@ -307,7 +335,7 @@ public class PaymentActivity extends AppCompatActivity implements PaymentResultW
             // Prefill customer details
             JSONObject prefill = new JSONObject();
             prefill.put("name", customerName);
-            prefill.put("email", customerEmail);
+            //prefill.put("email", customerEmail);
             prefill.put("contact", customerContact);
             options.put("prefill", prefill);
 
@@ -337,7 +365,7 @@ public class PaymentActivity extends AppCompatActivity implements PaymentResultW
             String signature = paymentData.getSignature();
 
             // Verify on server
-            verifyPaymentOnServer(orderId, paymentId, signature);
+            verifyPaymentOnServer(orderId, paymentId, signature,selectedPlanId);
 
         } catch (Exception e) {
             Log.e("PAY_ERROR", "Error processing payment success", e);
@@ -345,7 +373,7 @@ public class PaymentActivity extends AppCompatActivity implements PaymentResultW
         }
     }
 
-    private void verifyPaymentOnServer(String orderId, String paymentId, String signature) {
+    private void verifyPaymentOnServer(String orderId, String paymentId, String signature,int selectedPlanId) {
         showLoading(true);
 
         String url = APIs.RazorPayVerification;
@@ -355,6 +383,8 @@ public class PaymentActivity extends AppCompatActivity implements PaymentResultW
             body.put("RazorpayOrderId", orderId);
             body.put("RazorpayPaymentId", paymentId);
             body.put("RazorpaySignature", signature);
+            body.put("planId", selectedPlanId);
+
 
             // 🟢 Get driverId and token from SharedPreferences
             SharedPreferences prefs = getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
@@ -394,7 +424,7 @@ public class PaymentActivity extends AppCompatActivity implements PaymentResultW
                                     // Handle successful verification logic
                                 }
 
-                                Intent intent = new Intent(this, HomeActivity.class);
+                                Intent intent = new Intent(this, VerificationCheckActivity.class);
                                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                                 startActivity(intent);
                                 finish();
@@ -472,6 +502,8 @@ public class PaymentActivity extends AppCompatActivity implements PaymentResultW
         SharedPreferences prefs = getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
         int driverId = prefs.getInt("user_id", 0);
 
+        swipeRefresh.setRefreshing(true);
+
         String url = GetPaymentdetails + driverId;
 
         RequestQueue queue = Volley.newRequestQueue(this);
@@ -489,13 +521,12 @@ public class PaymentActivity extends AppCompatActivity implements PaymentResultW
 
                             Log.d("PAYMENT_STATUS", "Status: " + status);
 
-                            // IMPORTANT: Make lowercase comparison
                             if (status.equalsIgnoreCase("captured")) {
 
                                 Toast.makeText(this, "Payment successful!", Toast.LENGTH_SHORT).show();
 
                                 // Redirect automatically
-                                Intent i = new Intent(this, HomeActivity.class);
+                                Intent i = new Intent(this, VerificationCheckActivity.class);
                                 i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                                 startActivity(i);
                                 finish();
@@ -511,10 +542,12 @@ public class PaymentActivity extends AppCompatActivity implements PaymentResultW
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
+                    swipeRefresh.setRefreshing(false);
                 },
                 error -> {
                     Log.e("PAYMENT_STATUS", "Error fetching payment", error);
                     Toast.makeText(this, "Error checking payment status", Toast.LENGTH_LONG).show();
+                    swipeRefresh.setRefreshing(false);
                 }
         );
 

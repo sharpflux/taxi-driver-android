@@ -5,15 +5,15 @@
         android:icon="@drawable/ic_home"
         android:title="Home" />
     <item
-        android:id="@+id/nav_scanner"
-        android:icon="@drawable/ic_qrcode"
-        android:title="QR code" />
+        android:id="@+id/nav_settings"
+        android:icon="@drawable/ic_rides"
+        android:title="Rides" />
     <item
         android:id="@+id/nav_profile"
         android:icon="@drawable/ic_person"
         android:title="Profile" />
     <item
-        android:id="@+id/nav_settings"
-        android:icon="@drawable/ic_rides"
-        android:title="Rides" />
+        android:id="@+id/nav_scanner"
+        android:icon="@drawable/ic_history"
+        android:title="History" />
 </menu>

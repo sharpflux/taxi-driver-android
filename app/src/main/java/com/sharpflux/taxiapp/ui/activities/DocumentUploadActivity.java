@@ -333,7 +333,7 @@ public class DocumentUploadActivity extends AppCompatActivity {
 
                     // Convert image to base64
                     String base64Image = convertImageToBase64(imageUri);
-                    docObj.put("documentImage", base64Image);
+                    docObj.put("documentImage", "data:image/jpeg;base64," + base64Image);
 
                     // Set document validity (you can add date picker for this)
                     docObj.put("documentValidTo", "2026-12-31T23:59:59.000Z");

@@ -1,11 +1,12 @@
 package com.sharpflux.taxiapp.data.model;
 
 import android.net.Uri;
-
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Driver {
+
     private int driverId;
     private String driverCode;
     private String firstName;
@@ -19,331 +20,246 @@ public class Driver {
     private int cityId;
     private int stateId;
     private int genderId;
-    private int languageId;
-    private boolean speak;
-    private boolean understand;
+
     private boolean termsConditions;
     private boolean isActive;
+
     private String aadharNumber;
     private Uri drivingLicenseImage;
-    private String drivingLicenseValidTo;
+    private String drivingLicenseValid;
     private Uri insuranceProof;
-    private String insuranceValidTo;
+    private String insuranceValid;
+
     private int vehicleTypeId;
     private String vehicleNumber;
     private int roleId;
     private int userId;
+
     private Uri rcbookImageUri;
     private Uri signatureUri;
+
     private boolean isVerified;
     private int statusId;
     private int verificationStatus;
     private String rejectionReason;
     private String verificationDate;
     private int verifiedBy;
-    private int locationId;
-    private Map<Integer, String> documentBase64Map;
 
-    // Dynamic document storage
+    private int locationId;
+
+    private Map<Integer, String> documentBase64Map;
     private Map<Integer, Uri> documentUriMap = new HashMap<>();
 
-    public Driver() {
-    }
-
-    // Getters and Setters
-    public int getDriverId() {
-        return driverId;
-    }
-
-    public void setDriverId(int driverId) {
-        this.driverId = driverId;
-    }
-    public  String getDriverCode(){return driverCode;}
-    public  void  setDriverCode(String driverCode){this.driverCode=driverCode;}
-
-    public String getFirstName() {
-        return firstName;
-    }
-
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-
-    public String getMiddleName() {
-        return middleName;
-    }
-
-    public void setMiddleName(String middleName) {
-        this.middleName = middleName;
-    }
-
-    public String getLastName() {
-        return lastName;
-    }
-
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
-
-    public String getEmailId() {
-        return emailId;
-    }
-
-    public void setEmailId(String emailId) {
-        this.emailId = emailId;
-    }
-
-    public String getPhoneNumber() {
-        return phoneNumber;
-    }
-
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
-    }
-
-    public String getPassword() {
-        return passwordHash;
-    }
-
-    public void setPassword(String password) {
-        this.passwordHash = password;
-    }
-
-    public Uri getProfileImageUri() {
-        return profileImage;
-    }
-
-    public void setProfileImage(Uri profileImage) {
-        this.profileImage = profileImage;
-    }
+    // ⭐ Newly Added Fields
+    private String pincode;
+    private String panNumber;
+    private int fuelTypeId;
+    private String drivingLicenceNo;
+    private String vehicleValid;
+    private List<DriverLanguage> languages;
 
-    public String getAddress() {
-        return address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
-    }
+    public static class DriverLanguage {
 
-    public int getCityId() {
-        return cityId;
-    }
+        private int driverLanguageId;
+        private int driversId;
+        private int languageId;
+        private boolean canRead;
+        private boolean canWrite;
+        private boolean canSpeak;
 
-    public void setCityId(int cityId) {
-        this.cityId = cityId;
-    }
+        // Default constructor
+        public DriverLanguage() { }
 
-    public int getStateId() {
-        return stateId;
-    }
+        public int getDriverLanguageId() {
+            return driverLanguageId;
+        }
 
-    public void setStateId(int stateId) {
-        this.stateId = stateId;
-    }
+        public void setDriverLanguageId(int driverLanguageId) {
+            this.driverLanguageId = driverLanguageId;
+        }
 
-    public int getGenderId() {
-        return genderId;
-    }
+        public int getDriversId() {
+            return driversId;
+        }
 
-    public void setGenderId(int genderId) {
-        this.genderId = genderId;
-    }
+        public void setDriversId(int driversId) {
+            this.driversId = driversId;
+        }
 
-    public int getLanguageId() {
-        return languageId;
-    }
+        public int getLanguageId() {
+            return languageId;
+        }
 
-    public void setLanguageId(int languageId) {
-        this.languageId = languageId;
-    }
+        public void setLanguageId(int languageId) {
+            this.languageId = languageId;
+        }
 
-    public boolean isSpeak() {
-        return speak;
-    }
+        public boolean isCanRead() {
+            return canRead;
+        }
 
-    public void setSpeak(boolean speak) {
-        this.speak = speak;
-    }
+        public void setCanRead(boolean canRead) {
+            this.canRead = canRead;
+        }
 
-    public boolean isUnderstand() {
-        return understand;
-    }
+        public boolean isCanWrite() {
+            return canWrite;
+        }
 
-    public void setUnderstand(boolean understand) {
-        this.understand = understand;
-    }
+        public void setCanWrite(boolean canWrite) {
+            this.canWrite = canWrite;
+        }
 
-    public boolean isTermsConditions() {
-        return termsConditions;
-    }
+        public boolean isCanSpeak() {
+            return canSpeak;
+        }
 
-    public void setTermsConditions(boolean termsConditions) {
-        this.termsConditions = termsConditions;
-    }
+        public void setCanSpeak(boolean canSpeak) {
+            this.canSpeak = canSpeak;
+        }
 
-    public boolean isActive() {
-        return isActive;
+        @Override
+        public String toString() {
+            return "DriverLanguage{" +
+                    "languageId=" + languageId +
+                    ", canRead=" + canRead +
+                    ", canWrite=" + canWrite +
+                    ", canSpeak=" + canSpeak +
+                    '}';
+        }
     }
 
-    public void setIsActive(boolean isActive) {
-        this.isActive = isActive;
-    }
+    public Driver() { }
 
-    public String getAadharNumber() {
-        return aadharNumber;
-    }
+    //region Getters and Setters
 
-    public void setAadharNumber(String aadharNumber) {
-        this.aadharNumber = aadharNumber;
-    }
+    public int getDriverId() { return driverId; }
+    public void setDriverId(int driverId) { this.driverId = driverId; }
 
-    public Uri getDlImageUri() {
-        return drivingLicenseImage;
-    }
+    public String getDriverCode() { return driverCode; }
+    public void setDriverCode(String driverCode) { this.driverCode = driverCode; }
 
-    public void setDrivingLicenseImage(Uri drivingLicenseImage) {
-        this.drivingLicenseImage = drivingLicenseImage;
-    }
+    public String getFirstName() { return firstName; }
+    public void setFirstName(String firstName) { this.firstName = firstName; }
 
-    public String getDlValidTo() {
-        return drivingLicenseValidTo;
-    }
+    public String getMiddleName() { return middleName; }
+    public void setMiddleName(String middleName) { this.middleName = middleName; }
 
-    public void setDrivingLicenseValidTo(String drivingLicenseValidTo) {
-        this.drivingLicenseValidTo = drivingLicenseValidTo;
-    }
+    public String getLastName() { return lastName; }
+    public void setLastName(String lastName) { this.lastName = lastName; }
 
-    public Uri getInsuranceImageUri() {
-        return insuranceProof;
-    }
+    public String getEmailId() { return emailId; }
+    public void setEmailId(String emailId) { this.emailId = emailId; }
 
-    public void setInsuranceProof(Uri insuranceProof) {
-        this.insuranceProof = insuranceProof;
-    }
+    public String getPhoneNumber() { return phoneNumber; }
+    public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
 
-    public String getInsuranceValidTo() {
-        return insuranceValidTo;
-    }
+    public String getPassword() { return passwordHash; }
+    public void setPassword(String password) { this.passwordHash = password; }
 
-    public void setInsuranceValidTo(String insuranceValidTo) {
-        this.insuranceValidTo = insuranceValidTo;
-    }
+    public Uri getProfileImageUri() { return profileImage; }
+    public void setProfileImage(Uri profileImage) { this.profileImage = profileImage; }
 
-    public int getVehicleTypeId() {
-        return vehicleTypeId;
-    }
+    public String getAddress() { return address; }
+    public void setAddress(String address) { this.address = address; }
 
-    public void setVehicleTypeId(int vehicleTypeId) {
-        this.vehicleTypeId = vehicleTypeId;
-    }
+    public int getCityId() { return cityId; }
+    public void setCityId(int cityId) { this.cityId = cityId; }
 
-    public String getVehicleNumber() {
-        return vehicleNumber;
-    }
+    public int getStateId() { return stateId; }
+    public void setStateId(int stateId) { this.stateId = stateId; }
 
-    public void setVehicleNumber(String vehicleNumber) {
-        this.vehicleNumber = vehicleNumber;
-    }
+    public int getGenderId() { return genderId; }
+    public void setGenderId(int genderId) { this.genderId = genderId; }
 
-    public int getRoleId() {
-        return roleId;
-    }
+    public boolean isTermsConditions() { return termsConditions; }
+    public void setTermsConditions(boolean termsConditions) { this.termsConditions = termsConditions; }
 
-    public void setRoleId(int roleId) {
-        this.roleId = roleId;
-    }
+    public boolean isActive() { return isActive; }
+    public void setIsActive(boolean isActive) { this.isActive = isActive; }
 
-    public int getUserId() {
-        return userId;
-    }
+    public String getAadharNumber() { return aadharNumber; }
+    public void setAadharNumber(String aadharNumber) { this.aadharNumber = aadharNumber; }
 
-    public void setUserId(int userId) {
-        this.userId = userId;
-    }
+    public Uri getDlImageUri() { return drivingLicenseImage; }
+    public void setDrivingLicenseImage(Uri drivingLicenseImage) { this.drivingLicenseImage = drivingLicenseImage; }
 
-    public Uri getRcbookImageUri() {
-        return rcbookImageUri;
-    }
+    public String getDlValidTo() { return drivingLicenseValid; }
+    public void setDrivingLicenseValidTo(String drivingLicenseValid) { this.drivingLicenseValid = drivingLicenseValid; }
 
-    public void setRcbookImageUri(Uri rcbookImageUri) {
-        this.rcbookImageUri = rcbookImageUri;
-    }
+    public String getVehicleValidTo() {return vehicleValid;}
+    public void setVehicleValidTo(String vehicleValid) {this.vehicleValid=vehicleValid;}
+    public Uri getInsuranceImageUri() { return insuranceProof; }
+    public void setInsuranceProof(Uri insuranceProof) { this.insuranceProof = insuranceProof; }
 
-    public Uri getSignatureUri() {
-        return signatureUri;
-    }
+    public String getInsuranceValidTo() { return insuranceValid; }
+    public void setInsuranceValidTo(String insuranceValid) { this.insuranceValid = insuranceValid; }
 
-    public void setSignatureUri(Uri signatureUri) {
-        this.signatureUri = signatureUri;
-    }
+    public int getVehicleTypeId() { return vehicleTypeId; }
+    public void setVehicleTypeId(int vehicleTypeId) { this.vehicleTypeId = vehicleTypeId; }
 
-    public boolean isVerified() {
-        return isVerified;
-    }
+    public String getVehicleNumber() { return vehicleNumber; }
+    public void setVehicleNumber(String vehicleNumber) { this.vehicleNumber = vehicleNumber; }
 
-    public void setVerified(boolean verified) {
-        isVerified = verified;
-    }
+    public int getRoleId() { return roleId; }
+    public void setRoleId(int roleId) { this.roleId = roleId; }
 
-    public int getVerificationStatus() {
-        return verificationStatus;
-    }
+    public int getUserId() { return userId; }
+    public void setUserId(int userId) { this.userId = userId; }
 
-    public void setVerificationStatus(int verificationStatus) {
-        this.verificationStatus = verificationStatus;
-    }
+    public Uri getRcbookImageUri() { return rcbookImageUri; }
+    public void setRcbookImageUri(Uri rcbookImageUri) { this.rcbookImageUri = rcbookImageUri; }
 
-    public int getStatusId() {
-        return statusId;
-    }
+    public Uri getSignatureUri() { return signatureUri; }
+    public void setSignatureUri(Uri signatureUri) { this.signatureUri = signatureUri; }
 
-    public void setStatusId(int statusId) {
-        this.statusId = statusId;
-    }
+    public boolean isVerified() { return isVerified; }
+    public void setVerified(boolean verified) { isVerified = verified; }
 
-    public String getRejectionReason() {
-        return rejectionReason;
-    }
+    public int getVerificationStatus() { return verificationStatus; }
+    public void setVerificationStatus(int verificationStatus) { this.verificationStatus = verificationStatus; }
 
-    public void setRejectionReason(String rejectionReason) {
-        this.rejectionReason = rejectionReason;
-    }
+    public int getStatusId() { return statusId; }
+    public void setStatusId(int statusId) { this.statusId = statusId; }
 
-    public String getVerificationDate() {
-        return verificationDate;
-    }
+    public String getRejectionReason() { return rejectionReason; }
+    public void setRejectionReason(String rejectionReason) { this.rejectionReason = rejectionReason; }
 
-    public void setVerificationDate(String verificationDate) {
-        this.verificationDate = verificationDate;
-    }
+    public String getVerificationDate() { return verificationDate; }
+    public void setVerificationDate(String verificationDate) { this.verificationDate = verificationDate; }
 
-    public int getVerifiedBy() {
-        return verifiedBy;
+    public List<DriverLanguage> getLanguages() {
+        return languages;
     }
 
-    public void setVerifiedBy(int verifiedBy) {
-        this.verifiedBy = verifiedBy;
+    public void setLanguages(List<DriverLanguage> languages) {
+        this.languages = languages;
     }
 
-    public int getLocationId() {
-        return locationId;
-    }
+    public int getVerifiedBy() { return verifiedBy; }
+    public void setVerifiedBy(int verifiedBy) { this.verifiedBy = verifiedBy; }
 
-    public void setLocationId(int locationId) {
-        this.locationId = locationId;
-    }
+    public int getLocationId() { return locationId; }
+    public void setLocationId(int locationId) { this.locationId = locationId; }
 
-    public Map<Integer, Uri> getDocumentUriMap() {
-        return documentUriMap;
-    }
+    public Map<Integer, Uri> getDocumentUriMap() { return documentUriMap; }
+    public void setDocumentUriMap(Map<Integer, Uri> documentUriMap) { this.documentUriMap = documentUriMap; }
 
-    public void setDocumentUriMap(Map<Integer, Uri> documentUriMap) {
-        this.documentUriMap = documentUriMap;
-    }
     public Map<Integer, String> getDocumentBase64Map() { return documentBase64Map; }
     public void setDocumentBase64Map(Map<Integer, String> map) { this.documentBase64Map = map; }
 
-    //endregion
+    // ⭐ Newly Added Field Getters/Setters
+    public String getPincode() { return pincode; }
+    public void setPincode(String pincode) { this.pincode = pincode; }
+
+    public String getPanNumber() { return panNumber; }
+    public void setPanNumber(String panNumber) { this.panNumber = panNumber; }
+
+    public int getFuelTypeId() { return fuelTypeId; }
+    public void setFuelTypeId(int fuelTypeId) { this.fuelTypeId = fuelTypeId; }
+
+    public String getDrivingLicenceNo() { return drivingLicenceNo; }
+    public void setDrivingLicenceNo(String drivingLicenceNo) { this.drivingLicenceNo = drivingLicenceNo; }
 
     @Override
     public String toString() {
@@ -357,10 +273,9 @@ public class Driver {
                 ", stateId=" + stateId +
                 ", genderId=" + genderId +
                 ", vehicleTypeId=" + vehicleTypeId +
-                ", languageId=" + languageId +
                 ", roleId=" + roleId +
                 ", isVerified=" + isVerified +
-                ",statusId=" + statusId +
+                ", statusId=" + statusId +
                 ", verificationStatus=" + verificationStatus +
                 ", isActive=" + isActive +
                 '}';

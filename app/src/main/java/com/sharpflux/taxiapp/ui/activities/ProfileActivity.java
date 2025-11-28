@@ -22,6 +22,7 @@ import androidx.core.content.ContextCompat;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.sharpflux.taxiapp.R;
 import com.sharpflux.taxiapp.utils.SessionManager;
+import com.sharpflux.taxiapp.utils.UserPreferences;
 
 public class ProfileActivity extends AppCompatActivity {
 
@@ -29,7 +30,8 @@ public class ProfileActivity extends AppCompatActivity {
     private TextView tvUserName, tvUserEmail;
     private LinearLayout llPersonalInfo, llPaymentMethods, llNotifications, llHelpSupport, llSettings, llLogout;
     private BottomNavigationView bottomNavigationView;
-    private SessionManager sessionManager;
+
+    private UserPreferences userPreferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,8 +50,7 @@ public class ProfileActivity extends AppCompatActivity {
             window.setStatusBarColor(ContextCompat.getColor(this, R.color.white));
             window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
         }
-
-        //Layout
+        //layout
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
             getWindow().getDecorView().setOnApplyWindowInsetsListener((v, insets) -> {
                 int topInset = insets.getInsets(WindowInsets.Type.statusBars()).top;
@@ -64,7 +65,8 @@ public class ProfileActivity extends AppCompatActivity {
             });
         }
 
-        sessionManager = new SessionManager(this);
+        userPreferences = new UserPreferences(this);
+
         initViews();
         setupListeners();
         loadUserData();
@@ -74,8 +76,8 @@ public class ProfileActivity extends AppCompatActivity {
     private void initViews() {
         btnBack = findViewById(R.id.btnBack);
         ivProfilePic = findViewById(R.id.ivProfilePic);
-        //tvUserName = findViewById(R.id.tvUserName);
         tvUserEmail = findViewById(R.id.tvUserEmail);
+        tvUserName = findViewById(R.id.tvUserName);
         llPersonalInfo = findViewById(R.id.llPersonalInfo);
         llPaymentMethods = findViewById(R.id.llPaymentMethods);
         llNotifications = findViewById(R.id.llNotifications);
@@ -88,89 +90,34 @@ public class ProfileActivity extends AppCompatActivity {
     private void setupListeners() {
         btnBack.setOnClickListener(v -> finish());
 
-        ivProfilePic.setOnClickListener(v -> {
-            // Open image picker or camera
-            // TODO: Implement profile picture change
-        });
-
         llPersonalInfo.setOnClickListener(v -> {
-            Intent intent = new Intent(this, RegistrationActivity.class);
-            startActivity(intent);
+            startActivity(new Intent(this, RegistrationActivity.class));
         });
 
         llPaymentMethods.setOnClickListener(v -> {
-            // Navigate to Razorpay Payment screen
-            Intent intent = new Intent(ProfileActivity.this, PaymentActivity.class);
-
-            // You can also pass data if needed (for example, the ride amount, user info, etc.)
-            intent.putExtra("amount", 200); // ₹200 — replace this dynamically as needed
-            intent.putExtra("customerName", sessionManager.getUsername());
-            intent.putExtra("customerEmail", sessionManager.getUserEmail());
-            intent.putExtra("customerContact", "9999999999"); // dummy contact or from session
-
+            Intent intent = new Intent(ProfileActivity.this, PricingPlansActivity.class);
+//            intent.putExtra("amount", 200);
+//            intent.putExtra("customerName", userPreferences.getUserName());
+//            intent.putExtra("customerEmail", userPreferences.getUserEmail());
+//            intent.putExtra("customerContact", userPreferences.getUserPhone());
             startActivity(intent);
         });
 
-
-        llNotifications.setOnClickListener(v -> {
-            // Navigate to Notifications screen
-            // Intent intent = new Intent(this, NotificationsActivity.class);
-            // startActivity(intent);
-        });
-
-        llHelpSupport.setOnClickListener(v -> {
-            // Navigate to Help & Support screen
-             Intent intent = new Intent(this, HelpSupportActivity.class);
-             startActivity(intent);
-        });
-
-        llSettings.setOnClickListener(v -> {
-            // Navigate to Settings screen
-             Intent intent = new Intent(this, SettingsActivity.class);
-             startActivity(intent);
-        });
+        llHelpSupport.setOnClickListener(v -> startActivity(new Intent(this, HelpSupportActivity.class)));
+        llSettings.setOnClickListener(v -> startActivity(new Intent(this, SettingsActivity.class)));
 
         llLogout.setOnClickListener(v -> showLogoutDialog());
     }
 
-    private void setupBottomNavigation() {
-        bottomNavigationView.setSelectedItemId(R.id.nav_profile);
-
-        bottomNavigationView.setOnItemSelectedListener(item -> {
-            int id = item.getItemId();
-
-            if (id == R.id.nav_home) {
-                startActivity(new Intent(ProfileActivity.this, HomeActivity.class));
-                overridePendingTransition(0, 0);
-                finish();
-                return true;
-            } else if (id == R.id.nav_scanner) {
-                startActivity(new Intent(ProfileActivity.this, QRActivity.class));
-                overridePendingTransition(0, 0);
-                finish();
-                return true;
-            } else if (id == R.id.nav_profile) {
-                return true;
-            } else if (id == R.id.nav_settings) {
-                startActivity(new Intent(ProfileActivity.this, RidesActivity.class));
-                overridePendingTransition(0, 0);
-                finish();
-                return true;
-            }
-            return false;
-        });
-    }
-
     private void loadUserData() {
-        // Load user data from session
-        String username = sessionManager.getUsername();
-        String email = sessionManager.getUserEmail();
+        String email = userPreferences.getUserEmail();
+        String name = userPreferences.getUserName();
 
-//        if (username != null && !username.isEmpty()) {
-//            tvUserName.setText(username);
-//        } else {
-//            tvUserName.setText("Your Profile");
-//        }
+        if (name != null && !name.isEmpty()) {
+            tvUserName.setText(name);
+        } else {
+            tvUserName.setText("Your Profile");
+        }
 
         if (email != null && !email.isEmpty()) {
             tvUserEmail.setText(email);
@@ -179,19 +126,46 @@ public class ProfileActivity extends AppCompatActivity {
         }
     }
 
+    private void setupBottomNavigation() {
+        bottomNavigationView.setSelectedItemId(R.id.nav_profile);
+
+        bottomNavigationView.setOnItemSelectedListener(item -> {
+
+            int id = item.getItemId();
+
+            if (id == R.id.nav_home) {
+                startActivity(new Intent(ProfileActivity.this, HomeActivity.class));
+                finish();
+                return true;
+            } else if (id == R.id.nav_scanner) {
+                startActivity(new Intent(ProfileActivity.this, BillRequestActivity.class));
+                finish();
+                return true;
+            } else if (id == R.id.nav_profile) {
+                return true;
+            } else if (id == R.id.nav_settings) {
+                startActivity(new Intent(ProfileActivity.this, RidesActivity.class));
+                finish();
+                return true;
+            }
+            return false;
+        });
+    }
+
     private void showLogoutDialog() {
         new AlertDialog.Builder(this, R.style.CustomAlertDialog)
                 .setTitle("Logout")
                 .setMessage("Are you sure you want to logout?")
                 .setPositiveButton("Logout", (dialog, which) -> {
-                    // Clear session
-                    sessionManager.logout();
 
-                    // Navigate to login screen
+                    // ✅ Clear session using UserPreferences
+                    userPreferences.clearSession();
+
+                    // Go to login
                     Intent intent = new Intent(ProfileActivity.this, PhoneLoginActivity.class);
                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                     startActivity(intent);
-                    finish();
+
                 })
                 .setNegativeButton("Cancel", null)
                 .show();
@@ -201,6 +175,6 @@ public class ProfileActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         bottomNavigationView.setSelectedItemId(R.id.nav_profile);
-        loadUserData(); // Refresh user data when returning to screen
+        loadUserData();
     }
 }

@@ -128,7 +128,7 @@ public class DriverRepository {
         VolleyClient.getInstance(context).addToRequestQueue(request);
     }
 
-    // ✅ FIXED: Register driver with correct request body structure
+    // REGISTER DRIVER
     public void registerDriver(Driver data, RegistrationCallback callback) {
         Log.d(TAG, "=== DRIVER REGISTRATION START ===");
         Log.d(TAG, "URL: " + DriverRegisterURL);
@@ -156,11 +156,20 @@ public class DriverRepository {
             params.put("termsConditions", data.isTermsConditions());
             params.put("aadharNumber", data.getAadharNumber());
 
+            // ADDED
+            params.put("pincode", data.getPincode());
+            params.put("panNumber", data.getPanNumber());
+            params.put("fuelTypeId", data.getFuelTypeId());
+            params.put("drivingLicenceNo", data.getDrivingLicenceNo());
+            params.put("drivingLicenceValid",data.getDlValidTo());
+            params.put("insuranceValid",data.getInsuranceValidTo());
+            params.put("vehicleValid",data.getVehicleValidTo());
+
             // Vehicle Info
             params.put("vehicleTypeId", data.getVehicleTypeId());
             params.put("vehicleNumber", data.getVehicleNumber() != null ? data.getVehicleNumber() : "");
 
-            // Meta & Flags
+            // Meta Info
             params.put("roleId", data.getRoleId());
             params.put("isVerified", data.isVerified());
             params.put("statusId", 1);
@@ -168,117 +177,75 @@ public class DriverRepository {
             params.put("verifiedBy", data.getVerifiedBy());
             params.put("createdBy", 0);
 
-            // ✅ DETAILS ARRAY - Dynamic Documents
+            // Docs
             JSONArray detailsArray = new JSONArray();
             Map<Integer, String> base64Map = data.getDocumentBase64Map();
 
             if (base64Map != null && !base64Map.isEmpty()) {
-                Log.d(TAG, "Processing " + base64Map.size() + " documents");
-
                 for (Map.Entry<Integer, String> entry : base64Map.entrySet()) {
-                    String base64Data = entry.getValue();
-
-                    // Validate Base64
-                    if (base64Data == null || base64Data.trim().isEmpty()) {
-                        Log.e(TAG, "❌ Skipping document " + entry.getKey() + " - empty Base64");
-                        callback.onResult(false, "Document upload failed for ID: " + entry.getKey());
-                        return;
-                    }
-
-                    base64Data = base64Data.replaceAll("\\s+", "");
-
-                    if (!base64Data.matches("^[A-Za-z0-9+/]*={0,2}$")) {
-                        Log.e(TAG, "❌ Document " + entry.getKey() + " has invalid Base64 format");
-                        callback.onResult(false, "Invalid document format for ID: " + entry.getKey());
-                        return;
-                    }
-
                     JSONObject detailObj = new JSONObject();
                     detailObj.put("driverDetailId", 0);
                     detailObj.put("documentTypeId", entry.getKey());
-                    detailObj.put("documentImage", base64Data);
+                    detailObj.put("documentImage", "data:image/jpeg;base64," + entry.getValue());
                     detailObj.put("documentValidTo", convertToISODateTime(data.getDlValidTo() != null ? data.getDlValidTo() : "2030-12-31"));
-                    detailObj.put("verificationStatusId", 0);
+                    detailObj.put("verificationStatusId", 1);
                     detailObj.put("rejectionReason", JSONObject.NULL);
-
                     detailsArray.put(detailObj);
-
-                    Log.d(TAG, "✅ Document " + entry.getKey() + " - Size: " + (base64Data.length() / 1024) + " KB");
                 }
             } else {
-                Log.e(TAG, "❌ No documents found!");
                 callback.onResult(false, "No documents uploaded");
                 return;
             }
 
             params.put("details", detailsArray);
 
-            // ✅ LANGUAGES ARRAY
+            // Add Languages
             JSONArray languagesArray = new JSONArray();
-            JSONObject languageObj = new JSONObject();
-            languageObj.put("driverLanguageId", 0);
-            languageObj.put("driversId", 0);
-            languageObj.put("languageId", data.getLanguageId());
-            languageObj.put("canRead", data.isUnderstand());
-            languageObj.put("canWrite", false);
-            languageObj.put("canSpeak", data.isSpeak());
-            languagesArray.put(languageObj);
+
+            if (data.getLanguages() != null && !data.getLanguages().isEmpty()) {
+                for (Driver.DriverLanguage lang : data.getLanguages()) {
+
+                    JSONObject langObj = new JSONObject();
+                    langObj.put("driverLanguageId", lang.getDriverLanguageId());
+                    langObj.put("driversId", lang.getDriversId());
+                    langObj.put("languageId", lang.getLanguageId());
+                    langObj.put("canRead", lang.isCanRead());
+                    langObj.put("canWrite", lang.isCanWrite());
+                    langObj.put("canSpeak", lang.isCanSpeak());
+
+                    languagesArray.put(langObj);
+                }
+            }
 
             params.put("languages", languagesArray);
-
-            // Log payload size
-            int payloadSize = params.toString().length();
-            Log.d(TAG, "Payload Size: " + (payloadSize / 1024) + " KB");
-            Log.d(TAG, "Total documents: " + detailsArray.length());
-            Log.d(TAG, "Language ID: " + data.getLanguageId());
 
             sendDriverRequest(params, callback);
 
         } catch (JSONException e) {
-            Log.e(TAG, "❌ JSON creation error", e);
             callback.onResult(false, "Invalid JSON: " + e.getMessage());
-        } catch (Exception e) {
-            Log.e(TAG, "❌ Unexpected error", e);
-            callback.onResult(false, "Error: " + e.getMessage());
         }
     }
 
-    // Send request
     private void sendDriverRequest(JSONObject params, RegistrationCallback callback) {
         CustomJsonRequest request = new CustomJsonRequest(
                 Request.Method.POST,
                 DriverRegisterURL,
                 params.toString(),
                 response -> {
-                    Log.d(TAG, "=== SUCCESS ===");
-                    Log.d(TAG, "Response: " + response.toString());
-
                     try {
                         boolean success = response.optBoolean("success", true);
                         String message = response.optString("message", "Driver registered successfully!");
-
-                        if (response.has("driversId")) {
-                            int driverId = response.optInt("driversId");
-                            message = "Registration successful! Driver ID: " + driverId;
-                        } else if (response.has("data")) {
-                            message = "Registration successful! ID: " + response.optString("data");
-                        }
-
                         callback.onResult(success, message);
                     } catch (Exception e) {
-                        Log.e(TAG, "Error parsing success response", e);
                         callback.onResult(true, "Registration completed");
                     }
                 },
                 error -> {
-                    Log.e(TAG, "=== REGISTRATION ERROR ===");
                     String errorMsg = parseVolleyError(error);
-                    Log.e(TAG, "Final error: " + errorMsg);
                     callback.onResult(false, errorMsg);
                 }
         );
 
-        // 2 minute timeout for large payloads
         request.setRetryPolicy(new com.android.volley.DefaultRetryPolicy(
                 120000,
                 0,
@@ -288,7 +255,6 @@ public class DriverRepository {
         VolleyClient.getInstance(context).addToRequestQueue(request);
     }
 
-    // CUSTOM JSON REQUEST
     private static class CustomJsonRequest extends Request<JSONObject> {
         private final String requestBody;
         private final Response.Listener<JSONObject> listener;
@@ -314,7 +280,6 @@ public class DriverRepository {
             try {
                 return requestBody.getBytes("utf-8");
             } catch (UnsupportedEncodingException e) {
-                Log.e(TAG, "Encoding error", e);
                 return null;
             }
         }
@@ -342,7 +307,6 @@ public class DriverRepository {
         }
     }
 
-    // UTILITY: Parse Volley errors
     private String parseVolleyError(VolleyError error) {
         String errorMsg = "Request failed";
 
@@ -352,8 +316,6 @@ public class DriverRepository {
 
             if (error.networkResponse.data != null) {
                 String body = new String(error.networkResponse.data);
-                Log.e(TAG, "Error response: " + body);
-
                 try {
                     JSONObject errorJson = new JSONObject(body);
                     if (errorJson.has("message")) {
@@ -376,7 +338,6 @@ public class DriverRepository {
         return errorMsg;
     }
 
-    // UTILITY: Convert date to ISO format
     private String convertToISODateTime(String dateStr) {
         try {
             SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
@@ -386,7 +347,6 @@ public class DriverRepository {
             outputFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
             return outputFormat.format(date);
         } catch (Exception e) {
-            Log.e(TAG, "Date conversion error: " + dateStr, e);
             SimpleDateFormat outputFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
             outputFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
             return outputFormat.format(new Date());
@@ -434,59 +394,50 @@ public class DriverRepository {
         VolleyClient.getInstance(context).addToRequestQueue(request);
     }
 
-
     public void getDriverById(int driverId, DriverCallback callback) {
         getDrivers(driverId, callback);
     }
 
     private Driver parseDriver(JSONObject obj) throws Exception {
         Log.d(TAG, "=== PARSING DRIVER START ===");
-        Log.d(TAG, "JSON Object: " + obj.toString());
 
         Driver driver = new Driver();
 
-        // Parse with EXACT field names from API (Capital case)
         driver.setDriverId(obj.optInt("DriverId", 0));
-        Log.d(TAG, "DriverId: " + driver.getDriverId());
-
         driver.setDriverCode(obj.optString("DriverCode", ""));
-        Log.d(TAG, "DriverCode: " + driver.getDriverCode());
-
         driver.setFirstName(obj.optString("FirstName", ""));
-        Log.d(TAG, "FirstName: " + driver.getFirstName());
-
         driver.setMiddleName(obj.optString("MiddleName", ""));
         driver.setLastName(obj.optString("LastName", ""));
-        Log.d(TAG, "LastName: " + driver.getLastName());
-
         driver.setEmailId(obj.optString("EmailId", ""));
-        Log.d(TAG, "EmailId: " + driver.getEmailId());
-
         driver.setPhoneNumber(obj.optString("PhoneNumber", ""));
-        Log.d(TAG, "PhoneNumber: " + driver.getPhoneNumber());
-
         driver.setAddress(obj.optString("Address", ""));
-
         driver.setCityId(obj.optInt("CityId", 0));
-        Log.d(TAG, "CityId: " + driver.getCityId());
-
         driver.setStateId(obj.optInt("StateId", 0));
-        Log.d(TAG, "StateId: " + driver.getStateId());
-
-        driver.setAddress(obj.optString("Address",""));
+        driver.setPincode(obj.optString("pincode", null));
         driver.setGenderId(obj.optInt("GenderId", 0));
         driver.setLocationId(obj.optInt("LocationId", 0));
         driver.setIsActive(obj.optBoolean("IsActive", true));
-        driver.setAadharNumber(obj.optString("AadharNumber", ""));
-        driver.setInsuranceValidTo(obj.optString("InsuranceValidTo", null));
+        driver.setAadharNumber(obj.optString("AadharNumber", null));
+        driver.setPanNumber(obj.optString("panNumber", null));
+        driver.setInsuranceValidTo(obj.optString("InsuranceValid", null));
+        driver.setDrivingLicenseValidTo(obj.optString("drivingLicenceValid", null));
+        driver.setVehicleValidTo(obj.optString("vehicleValid", null));
         driver.setVehicleTypeId(obj.optInt("VehicleTypeId", 0));
+        driver.setFuelTypeId(obj.optInt("fuelTypeId", 0));
         driver.setVehicleNumber(obj.optString("VehicleNumber", ""));
-        driver.setLanguageId(obj.optInt("LanguageId", 0));
+        //driver.setLanguageId(obj.optInt("LanguageId", 0));
         driver.setRejectionReason(obj.optString("RejectionReason", ""));
         driver.setVerified(obj.optBoolean("IsVerified", false));
         driver.setStatusId(obj.optInt("StatusId", 0));
         driver.setVerifiedBy(obj.optInt("VerifiedBy", 0));
         driver.setRoleId(obj.optInt("RoleId", 0));
+
+        // ⭐ ADDED
+        driver.setPincode(obj.optString("Pincode", ""));
+        driver.setPanNumber(obj.optString("PanNumber", ""));
+        driver.setFuelTypeId(obj.optInt("FuelTypeId", 0));
+        driver.setDrivingLicenceNo(obj.optString("DrivingLicenceNo", ""));
+        // ⭐ ADDED END
 
         Log.d(TAG, "=== PARSING DRIVER END ===");
         return driver;

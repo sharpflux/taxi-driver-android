@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Logo Mobility</string>
+    <string name="app_name">Logo Mobility Driver</string>
     <string name="onboarding_image">Onboarding Image</string>
 <!--    <string name="onboarding_image">Onboarding illustration</string>-->
     <!-- Settings -->

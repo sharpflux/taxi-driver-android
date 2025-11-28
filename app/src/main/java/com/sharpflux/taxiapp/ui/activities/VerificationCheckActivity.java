@@ -77,7 +77,7 @@ public class VerificationCheckActivity extends AppCompatActivity {
             return;
         }
 
-        String apiUrl = url +"/" + driverId;
+        String apiUrl = url + "/" + driverId;
         RequestQueue queue = Volley.newRequestQueue(this);
 
         JsonArrayRequest request = new JsonArrayRequest(
@@ -93,29 +93,47 @@ public class VerificationCheckActivity extends AppCompatActivity {
                         }
 
                         JSONObject obj = response.getJSONObject(0);
+
+                        String paymentStatus = obj.optString("PaymentStatus", "");
                         int statusId = obj.optInt("StatusId", 0);
 
-                        Log.d(TAG, "Verification StatusId: " + statusId);
+                        Log.d(TAG, "paymentStatus = " + paymentStatus);
+                        Log.d(TAG, "statusId = " + statusId);
 
+//                        // ---------------------------------------------------
+//                        // FIRST CHECK PAYMENT STATUS
+//                        // ---------------------------------------------------
+//                        if (!paymentStatus.equalsIgnoreCase("Captured")) {
+//
+//                            // Payment not completed → redirect to PricingPlansActivity
+//                            Intent intent = new Intent(this, PricingPlansActivity.class);
+//                            startActivity(intent);
+//                            finish();
+//                            return; // stop further execution
+//                        }
+                        if(statusId==5){
+                            Intent intent = new Intent(this, HomeActivity.class);
+                            startActivity(intent);
+                            finish();
+                            return; // stop further execution
+                        }
+
+                        // ---------------------------------------------------
+                        // 2️⃣ PAYMENT CAPTURED → NOW CHECK STATUS ID
+                        // ---------------------------------------------------
                         switch (statusId) {
 
-                            case 5: // Payment Pending
-                                startActivity(new Intent(this, PaymentActivity.class));
-                                finish();
-                                break;
-
-                            case 2: // Document upload pending
+                            case 2: // Document upload required
                                 startActivity(new Intent(this, DocumentUploadActivity.class));
                                 finish();
                                 break;
 
-                            case 6: // Verified / Payment Captured
+                            case 5: // Verified → Go to Home
                                 startActivity(new Intent(this, HomeActivity.class));
                                 finish();
                                 break;
 
                             default:
-                                // Still pending → stay on this screen
                                 Toast.makeText(this, "Verification still pending...", Toast.LENGTH_SHORT).show();
                                 break;
                         }
@@ -124,11 +142,10 @@ public class VerificationCheckActivity extends AppCompatActivity {
                         e.printStackTrace();
                     }
                 },
-                error -> {
-                    Toast.makeText(this, "Error checking status", Toast.LENGTH_SHORT).show();
-                }
+                error -> Toast.makeText(this, "Error checking status", Toast.LENGTH_SHORT).show()
         );
 
         queue.add(request);
     }
+
 }

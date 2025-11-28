@@ -21,6 +21,7 @@ import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.Filter;
 import android.widget.Filterable;
@@ -39,6 +40,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.core.widget.NestedScrollView;
 
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.datepicker.MaterialDatePicker;
 import com.sharpflux.taxiapp.R;
 import com.sharpflux.taxiapp.data.model.DocumentType;
 import com.sharpflux.taxiapp.data.model.Driver;
@@ -50,6 +53,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -59,6 +63,7 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.view.ViewGroup;
 import com.google.android.material.card.MaterialCardView;
+import com.sharpflux.taxiapp.data.model.Driver.DriverLanguage;
 
 public class DriverRegistrationActivity extends AppCompatActivity {
 
@@ -75,7 +80,7 @@ public class DriverRegistrationActivity extends AppCompatActivity {
     private Button btnNext1;
 
     // Step 2 - Address Information
-    private EditText etAddress;
+    private EditText etAddress, edtPincode, edtPanNumber, edtDrivingLicenceNo;
     private AutoCompleteTextView actvState, actvCity;
     private Button btnBack2, btnNext2;
     private List<DropdownItem> stateList = new ArrayList<>();
@@ -85,11 +90,13 @@ public class DriverRegistrationActivity extends AppCompatActivity {
 
     // Step 3 - Vehicle Information
     private EditText etVehicleNumber;
-    private AutoCompleteTextView actvVehicleType;
-    private EditText etDlValidTo, etInsuranceValidTo;
+    private AutoCompleteTextView actvVehicleType,spnFuelType;
+    private EditText etDlValidTo, etInsuranceValidTo, etVehicleValidTo;
     private Button btnBack3, btnNext3;
     private List<DropdownItem> vehicleTypeList = new ArrayList<>();
+    private List<DropdownItem> fuelTypeList = new ArrayList<>();
     private ArrayAdapter<DropdownItem> vehicleTypeAdapter;
+    private ArrayAdapter<DropdownItem> fuelTypeAdapter;
 
     // Step 4 - Dynamic Documents & Language
     private AutoCompleteTextView actvLanguage;
@@ -104,6 +111,14 @@ public class DriverRegistrationActivity extends AppCompatActivity {
     private Map<Integer, Uri> documentUriMap = new HashMap<>();
     private Map<Integer, ImageView> documentImageViewMap = new HashMap<>();
     private int currentDocumentTypeId = 0;
+
+    //dynamic language
+    LinearLayout languageContainer;
+    Button btnAddLanguage;
+    private int selectedLanguageId = 0;
+
+    List<DriverLanguage> selectedLanguages = new ArrayList<>();
+
 
     private ActivityResultLauncher<Intent> imagePickerLauncher;
     private View rootView;
@@ -161,17 +176,24 @@ public class DriverRegistrationActivity extends AppCompatActivity {
         driver.setLocationId(0);
 
         initializeViews();
+
+        languageContainer = findViewById(R.id.languageContainer);
+        btnAddLanguage = findViewById(R.id.btnAddLanguage);
+
         setupImagePicker();
         setupListeners();
         loadDropdownData();
         loadDocumentTypes();
 
-        // Dynamic checkbox update on language select
-        actvLanguage.setOnItemClickListener((parent, view, position, id) -> {
-            String selectedLanguage = ((DropdownItem) parent.getItemAtPosition(position)).getText();
-            cbSpeak.setText("I can speak " + selectedLanguage);
-            cbUnderstand.setText("I can understand " + selectedLanguage);
-        });
+//        // Dynamic checkbox update on language select
+//        actvLanguage.setOnItemClickListener((parent, view, position, id) -> {
+//            String selectedLanguage = ((DropdownItem) parent.getItemAtPosition(position)).getText();
+//            cbSpeak.setText("I can speak " + selectedLanguage);
+//            cbUnderstand.setText("I can understand " + selectedLanguage);
+//        });
+
+
+
     }
 
     private void setupKeyboardDetection() {
@@ -265,6 +287,7 @@ public class DriverRegistrationActivity extends AppCompatActivity {
         etEmailId = findViewById(R.id.etEmailId);
         etPhoneNumber = findViewById(R.id.etPhoneNumber);
         etAadhar = findViewById(R.id.etAadhar);
+        edtPanNumber = findViewById(R.id.edtPanNumber);
         etPassword = findViewById(R.id.etPassword);
         rgGender = findViewById(R.id.rgGender);
         btnNext1 = findViewById(R.id.btnNext1);
@@ -273,29 +296,39 @@ public class DriverRegistrationActivity extends AppCompatActivity {
         etAddress = findViewById(R.id.etAddress);
         actvState = findViewById(R.id.actvState);
         actvCity = findViewById(R.id.actvCity);
+        edtPincode = findViewById(R.id.edtPincode);
         btnBack2 = findViewById(R.id.btnBack2);
         btnNext2 = findViewById(R.id.btnNext2);
 
         // Step 3
         etVehicleNumber = findViewById(R.id.etVehicleNumber);
         actvVehicleType = findViewById(R.id.actvVehicleType);
+        spnFuelType = findViewById(R.id.spnFuelType);
+        edtDrivingLicenceNo = findViewById(R.id.edtDrivingLicenceNo);
         etDlValidTo = findViewById(R.id.etDlValidTo);
         etInsuranceValidTo = findViewById(R.id.etInsuranceValidTo);
+        etVehicleValidTo = findViewById(R.id.etVehicleValidTo);
         btnBack3 = findViewById(R.id.btnBack3);
         btnNext3 = findViewById(R.id.btnNext3);
 
         // Step 4
         documentsContainer = findViewById(R.id.documentsContainer);
         actvLanguage = findViewById(R.id.actvLanguage);
-        cbSpeak = findViewById(R.id.etSpeak);
-        cbUnderstand = findViewById(R.id.etUnderstand);
-        //cbTerms = findViewById(R.id.etTermsConditions);
+//        cbSpeak = findViewById(R.id.etSpeak);
+//        cbUnderstand = findViewById(R.id.etUnderstand);
         btnBack4 = findViewById(R.id.btnBack4);
         btnRegister = findViewById(R.id.btnRegister);
 
-        cvTermsConditions = findViewById(R.id.cvTermsConditions); // You'll need to add android:id to the MaterialCardView
+        cvTermsConditions = findViewById(R.id.cvTermsConditions);
         ivTermsCheck = findViewById(R.id.ivTermsCheck);
         tvTermsStatus = findViewById(R.id.tvTermsStatus);
+
+//        edtPincode = findViewById(R.id.edtPincode);
+//        edtPanNumber = findViewById(R.id.edtPanNumber);
+//        edtDrivingLicenceNo = findViewById(R.id.edtDrivingLicenceNo);
+//
+//
+//        spnFuelType = findViewById(R.id.spnFuelType);
     }
 
     private void setupImagePicker() {
@@ -339,6 +372,8 @@ public class DriverRegistrationActivity extends AppCompatActivity {
     private void setupListeners() {
         ivBackButton.setOnClickListener(v -> handleBackPress());
 
+        btnAddLanguage.setOnClickListener(v -> addLanguageCard());
+
         btnNext1.setOnClickListener(v -> {
             if (validateStep1()) {
                 saveStep1Data();
@@ -369,6 +404,7 @@ public class DriverRegistrationActivity extends AppCompatActivity {
 
         etDlValidTo.setOnClickListener(v -> showDatePicker(etDlValidTo));
         etInsuranceValidTo.setOnClickListener(v -> showDatePicker(etInsuranceValidTo));
+        etVehicleValidTo.setOnClickListener(v -> showDatePicker(etVehicleValidTo));
 
         actvState.setOnItemClickListener((parent, view, position, id) -> {
             DropdownItem selectedState = (DropdownItem) parent.getItemAtPosition(position);
@@ -385,51 +421,52 @@ public class DriverRegistrationActivity extends AppCompatActivity {
         dialog.setContentView(R.layout.dialog_terms_conditions);
         dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        dialog.setCancelable(false);
+        dialog.setCancelable(true);
 
         CheckBox cbAgreeTerms = dialog.findViewById(R.id.cbAgreeTerms);
-        //Button btnCancel = dialog.findViewById(R.id.btnCancel);
+        Button btnCancel = dialog.findViewById(R.id.btnCancel);
         Button btnAccept = dialog.findViewById(R.id.btnAccept);
 
-        // Initially disable accept button
-        btnAccept.setEnabled(false);
-        btnAccept.setAlpha(0.5f);
+        // Initialize checkbox based on current state
+        cbAgreeTerms.setChecked(termsAccepted);
 
-        // Enable accept button only when checkbox is checked
+        // Disable accept button initially
+        btnAccept.setEnabled(termsAccepted);
+        btnAccept.setAlpha(termsAccepted ? 1f : 0.5f);
+
+        // Enable button when checked
         cbAgreeTerms.setOnCheckedChangeListener((buttonView, isChecked) -> {
             btnAccept.setEnabled(isChecked);
-            btnAccept.setAlpha(isChecked ? 1.0f : 0.5f);
+            btnAccept.setAlpha(isChecked ? 1f : 0.5f);
         });
 
-//        btnCancel.setOnClickListener(v -> {
-//            dialog.dismiss();
-//        });
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
 
         btnAccept.setOnClickListener(v -> {
-            if (cbAgreeTerms.isChecked()) {
-                termsAccepted = true;
-                updateTermsUI(true);
-                dialog.dismiss();
-            } else {
-                Toast.makeText(this, getString(R.string.please_accept_terms), Toast.LENGTH_SHORT).show();
-            }
+            termsAccepted = cbAgreeTerms.isChecked();
+            updateTermsUI(termsAccepted);
+            dialog.dismiss();
         });
 
         dialog.show();
     }
-    private void updateTermsUI(boolean accepted) {
+
+    private void updateTermsUI(boolean accepted)
+    {
         if (accepted) {
             tvTermsStatus.setText("Terms & Conditions Accepted ✓");
             tvTermsStatus.setTextColor(ContextCompat.getColor(this, R.color.colorAccent));
             ivTermsCheck.setImageResource(android.R.drawable.checkbox_on_background);
             ivTermsCheck.setColorFilter(ContextCompat.getColor(this, R.color.colorAccent));
-        } else {
+        }
+        else {
             tvTermsStatus.setText(getString(R.string.view_terms_conditions));
             tvTermsStatus.setTextColor(ContextCompat.getColor(this, R.color.text_primary));
             ivTermsCheck.setImageResource(android.R.drawable.checkbox_off_background);
             ivTermsCheck.setColorFilter(ContextCompat.getColor(this, R.color.text_secondary));
         }
     }
+
 
 
     private void handleBackPress() {
@@ -520,14 +557,32 @@ public class DriverRegistrationActivity extends AppCompatActivity {
             }
         });
 
+        // Fuel types
+        repository.getDropdownData("", 1, 100, 10, 0, (success, items, message) -> {
+            if (success && items != null) {
+                fuelTypeList = items;
+                fuelTypeAdapter = new SearchableDropdownAdapter(fuelTypeList);
+                spnFuelType.setAdapter(fuelTypeAdapter);
+                spnFuelType.setThreshold(1);
+                spnFuelType.setOnClickListener(v -> spnFuelType.showDropDown());
+            }
+        });
+
         // Language Dropdown
-        repository.getDropdownData("", 1, 100, 5, 0, (success, items, message) -> {
+        repository.getDropdownData("", 1, 100, 9, 0, (success, items, message) -> {
             if (success && items != null) {
                 languageList = items;
                 languageAdapter = new SearchableDropdownAdapter(languageList);
                 actvLanguage.setAdapter(languageAdapter);
                 actvLanguage.setThreshold(1);
                 actvLanguage.setOnClickListener(v -> actvLanguage.showDropDown());
+
+                // ✅ ADD THIS: Capture selected language ID
+                actvLanguage.setOnItemClickListener((parent, view, position, id) -> {
+                    DropdownItem selectedItem = (DropdownItem) parent.getItemAtPosition(position);
+                    selectedLanguageId = selectedItem.getId();
+                    Log.d(TAG, "Language selected: " + selectedItem.getText() + " (ID: " + selectedLanguageId + ")");
+                });
             } else {
                 Log.e(TAG, "Language dropdown failed: " + message);
             }
@@ -545,6 +600,67 @@ public class DriverRegistrationActivity extends AppCompatActivity {
                 Log.e(TAG, "Document fetch failed: " + message);
             }
         });
+    }
+
+    private void addLanguageCard() {
+        String selectedLangName = actvLanguage.getText().toString().trim();
+
+        if (selectedLangName.isEmpty() || selectedLanguageId == 0) {
+            Toast.makeText(this, "Please choose a language from dropdown", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Check for duplicates
+        for (Driver.DriverLanguage dl : selectedLanguages) {
+            if (dl.getLanguageId() == selectedLanguageId) {
+                Toast.makeText(this, "Language already added", Toast.LENGTH_SHORT).show();
+                return;
+            }
+        }
+
+        View card = LayoutInflater.from(this).inflate(R.layout.item_language_card, languageContainer, false);
+
+        TextView tvLangName = card.findViewById(R.id.tvLangName);
+        CheckBox cbSpeak = card.findViewById(R.id.cbSpeak);
+        CheckBox cbRead = card.findViewById(R.id.cbRead);
+        CheckBox cbWrite = card.findViewById(R.id.cbWrite);
+        ImageView ivRemove = card.findViewById(R.id.ivRemoveLanguage);
+
+        tvLangName.setText(selectedLangName);
+
+        // Create language model
+        Driver.DriverLanguage dl = new Driver.DriverLanguage();
+        dl.setDriverLanguageId(0);
+        dl.setDriversId(0);
+        dl.setLanguageId(selectedLanguageId);
+        dl.setCanSpeak(false);
+        dl.setCanRead(false);
+        dl.setCanWrite(false);
+
+        selectedLanguages.add(dl);
+
+        // Update model when checkboxes change
+        cbSpeak.setOnCheckedChangeListener((compoundButton, checked) -> dl.setCanSpeak(checked));
+        cbRead.setOnCheckedChangeListener((compoundButton, checked) -> dl.setCanRead(checked));
+        cbWrite.setOnCheckedChangeListener((compoundButton, checked) -> dl.setCanWrite(checked));
+
+        // Remove card functionality
+        if (ivRemove != null) {
+            ivRemove.setOnClickListener(v -> {
+                languageContainer.removeView(card);
+                selectedLanguages.remove(dl);
+                Toast.makeText(this, "Language removed", Toast.LENGTH_SHORT).show();
+            });
+        }
+
+        // Add card to container
+        languageContainer.addView(card);
+
+        // Clear selection
+        actvLanguage.setText("");
+        selectedLanguageId = 0;
+
+        Toast.makeText(this, "Language added", Toast.LENGTH_SHORT).show();
     }
 
     private void createDynamicDocumentUI() {
@@ -602,11 +718,14 @@ public class DriverRegistrationActivity extends AppCompatActivity {
             return false;
         }
         String email = etEmailId.getText().toString().trim();
-        if (email.isEmpty() || !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            etEmailId.setError("Valid email is required");
+
+        // Email NOT required, but if entered → must be valid
+        if (!email.isEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            etEmailId.setError("Enter a valid email");
             etEmailId.requestFocus();
             return false;
         }
+
         if (etPhoneNumber.getText().toString().trim().length() < 10) {
             etPhoneNumber.setError("Valid 10-digit phone number required");
             etPhoneNumber.requestFocus();
@@ -617,6 +736,14 @@ public class DriverRegistrationActivity extends AppCompatActivity {
             etAadhar.requestFocus();
             return false;
         }
+        String pan = edtPanNumber.getText().toString().trim();
+
+        if (!pan.matches("[A-Z]{5}[0-9]{4}[A-Z]{1}")) {
+            edtPanNumber.setError("Enter valid PAN (eg.ABCDE1234F)");
+            edtPanNumber.requestFocus();
+            return false;
+        }
+
         if (etPassword.getText().toString().trim().length() < 6) {
             etPassword.setError("Password must be at least 6 characters");
             etPassword.requestFocus();
@@ -630,21 +757,41 @@ public class DriverRegistrationActivity extends AppCompatActivity {
     }
 
     private boolean validateStep2() {
+
         if (etAddress.getText().toString().trim().isEmpty()) {
             etAddress.setError("Address is required");
             etAddress.requestFocus();
             return false;
         }
+
         if (actvState.getText().toString().trim().isEmpty()) {
             actvState.setError("State is required");
-            actvState.requestFocus();
-            return false;
+            actvState.requestFocus(); return false;
         }
         if (actvCity.getText().toString().trim().isEmpty()) {
             actvCity.setError("City is required");
+            actvCity.requestFocus(); return false;
+        }
+        String stateText = actvState.getText().toString().trim();
+        if (stateText.isEmpty() || !isValidSelection(stateText, stateList)) {
+            actvState.setError("Select a valid state from dropdown");
+            actvState.requestFocus();
+            return false;
+        }
+
+        String cityText = actvCity.getText().toString().trim();
+        if (cityText.isEmpty() || !isValidSelection(cityText, cityList)) {
+            actvCity.setError("Select a valid city from dropdown");
             actvCity.requestFocus();
             return false;
         }
+
+        if (edtPincode.getText().toString().trim().isEmpty()) {
+            edtPincode.setError("Pin code is required");
+            edtPincode.requestFocus();
+            return false;
+        }
+
         return true;
     }
 
@@ -659,6 +806,41 @@ public class DriverRegistrationActivity extends AppCompatActivity {
             actvVehicleType.requestFocus();
             return false;
         }
+        if (spnFuelType.getText().toString().trim().isEmpty()) {
+            spnFuelType.setError("Fuel type required");
+            spnFuelType.requestFocus();
+            return false;
+        }
+        String vehicleType = actvVehicleType.getText().toString().trim();
+        if (vehicleType.isEmpty() || !isValidSelection(vehicleType, vehicleTypeList)) {
+            actvVehicleType.setError("Select valid vehicle type");
+            actvVehicleType.requestFocus();
+            return false;
+        }
+
+        String fuelType = spnFuelType.getText().toString().trim();
+        if (fuelType.isEmpty() || !isValidSelection(fuelType, fuelTypeList)) {
+            spnFuelType.setError("Select valid fuel type");
+            spnFuelType.requestFocus();
+            return false;
+        }
+        String dl = edtDrivingLicenceNo.getText().toString().trim();
+        String dlPattern = "^[A-Z]{2}[ -]?[0-9]{2}[ -]?[0-9]{4}[0-9]{7,10}$";
+
+        if (dl.isEmpty()) {
+            edtDrivingLicenceNo.setError("Licence number required");
+            edtDrivingLicenceNo.requestFocus();
+            return false;
+        }
+
+        if (!dl.matches(dlPattern)) {
+            edtDrivingLicenceNo.setError("Invalid licence number format");
+            edtDrivingLicenceNo.requestFocus();
+            return false;
+        }
+
+        edtDrivingLicenceNo.setError(null);
+
         if (etDlValidTo.getText().toString().trim().isEmpty()) {
             etDlValidTo.setError("Driving License valid date required");
             etDlValidTo.requestFocus();
@@ -669,8 +851,23 @@ public class DriverRegistrationActivity extends AppCompatActivity {
             etInsuranceValidTo.requestFocus();
             return false;
         }
+        if (etVehicleValidTo.getText().toString().trim().isEmpty()) {
+            etVehicleValidTo.setError("Vehicle valid date required");
+            etVehicleValidTo.requestFocus();
+            return false;
+        }
         return true;
     }
+
+    private boolean isValidSelection(String enteredText, List<DropdownItem> list) {
+        for (DropdownItem item : list) {
+            if (item.getText().equalsIgnoreCase(enteredText.trim())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     private void saveStep1Data() {
         driver.setFirstName(etFirstName.getText().toString().trim());
@@ -679,6 +876,7 @@ public class DriverRegistrationActivity extends AppCompatActivity {
         driver.setEmailId(etEmailId.getText().toString().trim());
         driver.setPhoneNumber(etPhoneNumber.getText().toString().trim());
         driver.setAadharNumber(etAadhar.getText().toString().trim());
+        driver.setPanNumber(edtPanNumber.getText().toString().trim());
         driver.setPassword(etPassword.getText().toString().trim());
         driver.setGenderId((rgGender.getCheckedRadioButtonId() == R.id.rbMale) ? 1 : 2);
 
@@ -703,19 +901,29 @@ public class DriverRegistrationActivity extends AppCompatActivity {
                 break;
             }
         }
+        driver.setPincode(edtPincode.getText().toString().trim());
 
         Log.d(TAG, "Step 2 saved: StateId=" + driver.getStateId() + ", CityId=" + driver.getCityId());
     }
 
     private void saveStep3Data() {
         driver.setVehicleNumber(etVehicleNumber.getText().toString().trim().toUpperCase());
+        driver.setDrivingLicenceNo(edtDrivingLicenceNo.getText().toString().trim());
         driver.setDrivingLicenseValidTo(etDlValidTo.getText().toString().trim());
         driver.setInsuranceValidTo(etInsuranceValidTo.getText().toString().trim());
+        driver.setVehicleValidTo(etVehicleValidTo.getText().toString().trim());
 
         String vehicleTypeText = actvVehicleType.getText().toString();
         for (DropdownItem item : vehicleTypeList) {
             if (item.getText().equals(vehicleTypeText)) {
                 driver.setVehicleTypeId(item.getId());
+                break;
+            }
+        }
+        String fuelTypeText = spnFuelType.getText().toString();
+        for (DropdownItem item : fuelTypeList) {
+            if (item.getText().equals(fuelTypeText)) {
+                driver.setFuelTypeId(item.getId());
                 break;
             }
         }
@@ -725,23 +933,14 @@ public class DriverRegistrationActivity extends AppCompatActivity {
     }
 
     private void saveStep4Data() {
-        String languageText = actvLanguage.getText().toString().trim();
-        for (DropdownItem item : languageList) {
-            if (item.getText().equals(languageText)) {
-                driver.setLanguageId(item.getId());
-                break;
-            }
-        }
 
-        driver.setSpeak(cbSpeak.isChecked());
-        driver.setUnderstand(cbUnderstand.isChecked());
+        driver.setLanguages(selectedLanguages);
+
         driver.setTermsConditions(termsAccepted);
 
 //        Log.d(TAG, "Step 4 saved: LanguageId=" + driver.getLanguageId() +
 //                ", Speak=" + driver.isSpeak() + ", Understand=" + driver.isUnderstand());
-        Log.d(TAG, "Step 4 saved: LanguageId=" + driver.getLanguageId() +
-                ", Speak=" + driver.isSpeak() + ", Understand=" + driver.isUnderstand() +
-                ", TermsAccepted=" + termsAccepted);
+        Log.d(TAG, "Step 4 saved: TermsAccepted=" + termsAccepted);
     }
 
     private void openImagePicker(int documentTypeId) {
@@ -750,32 +949,25 @@ public class DriverRegistrationActivity extends AppCompatActivity {
         imagePickerLauncher.launch(intent);
     }
 
-    private void showDatePicker(EditText targetEditText) {
-        Calendar calendar = Calendar.getInstance();
-        DatePickerDialog datePickerDialog = new DatePickerDialog(
-                this,
-                (view, year, month, dayOfMonth) -> {
-                    calendar.set(year, month, dayOfMonth);
-                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-                    targetEditText.setText(sdf.format(calendar.getTime()));
-                },
-                calendar.get(Calendar.YEAR),
-                calendar.get(Calendar.MONTH),
-                calendar.get(Calendar.DAY_OF_MONTH)
-        );
-        datePickerDialog.getDatePicker().setMinDate(System.currentTimeMillis());
-        datePickerDialog.show();
+    private void showDatePicker(EditText editText) {
+        MaterialDatePicker<Long> datePicker =
+                MaterialDatePicker.Builder.datePicker()
+                        .setTitleText("Select Date")
+                        .setSelection(MaterialDatePicker.todayInUtcMilliseconds())
+                        .setTheme(R.style.CustomDatePickerTheme)
+                        .build();
+
+        datePicker.addOnPositiveButtonClickListener(selection -> {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+            editText.setText(sdf.format(new Date(selection)));
+        });
+
+        datePicker.show(getSupportFragmentManager(), "DATE_PICKER");
     }
+
 
     private void registerDriver() {
         saveStep4Data();
-
-        // Validate language selection
-        if (actvLanguage.getText().toString().trim().isEmpty()) {
-            actvLanguage.setError("Language is required");
-            actvLanguage.requestFocus();
-            return;
-        }
 
         // Validate all required documents are uploaded
         for (DocumentType docType : documentTypes) {

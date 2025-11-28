@@ -11,7 +11,7 @@ public class   APIs {
 //    public static final String DriverRegisterURL = Main_URL + "DriversController1/DriverInsertUpdate";
     public static final String DriverRegisterURL = Main_URL + "Driver/DriverInsertUpdate";
     public static final String GenerateBillPdfURL = Main_URL + "CustomerBillRequest/GenerateCustomerBillPdf";
-    public static final String GetBillRequestURL = Main_URL + "CustomerBillRequest/GetByCustomerId";
+    public static final String GetBillRequestURL = Main_URL + "CustomerBillRequest/GetByDriverId";
     public static final String UpdateBillApprovalURL = Main_URL + "CustomerBillRequest/insert-update";
     public static final String GetDriversURL = Main_URL + "Driver/DriverGET";
     public static final String QR_URL = Main_URL + "QRCode/generate/{driverId}";
@@ -21,6 +21,7 @@ public class   APIs {
     public static final String GetPaymentdetails = Main_URL + "DriverPayment/driver/";
     public static final String GetDriverDocument = Main_URL + "Driver/document";
     public static final String UPDATE_DOCUMENT_URL = Main_URL + "Driver/documents/update";
+    public static final String GetPayplan =Main_URL + "Pricing/GetPlans";
 
 
 

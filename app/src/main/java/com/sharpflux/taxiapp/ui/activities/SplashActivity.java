@@ -81,52 +81,30 @@ public class SplashActivity extends AppCompatActivity {
                 null,
                 response -> {
                     try {
-                        int statusId = 0;
-                        String status="";
+                        String paymentStatus = "";
 
                         if (response.length() > 0) {
                             JSONObject obj = response.getJSONObject(0);
-                            statusId = obj.optInt("StatusId", 0);
-                            status = obj.optString("PaymentStatus","");
+                            paymentStatus = obj.optString("PaymentStatus", "");
                         }
 
-                        if (status.equalsIgnoreCase("captured")) {
-                            // Payment success → go to Home screen
-                            startActivity(new Intent(this, HomeActivity.class));
-                            finish();
-                        }
-                        else {
+                        Log.d("PaymentStatus", "PaymentStatus = " + paymentStatus);
 
+                        if (paymentStatus.equalsIgnoreCase("captured")) {
 
-                            Log.d(TAG, "StatusId = " + statusId);
+                            navigate(VerificationCheckActivity.class);
+                        } else {
 
-                            switch (statusId) {
-                                case 5:   // GO TO PAYMENT
-                                    navigate(PaymentActivity.class);
-                                    break;
-
-                                case 2:   // GO TO DOCUMENT UPLOAD
-                                    navigate(DocumentUploadActivity.class);
-                                    break;
-
-                                case 0:
-                                case 1:
-                                case 3:
-                                default:
-                                    // ALWAYS go to VerificationCheckActivity
-                                    navigate(VerificationCheckActivity.class);
-                                    break;
-                            }
+                            navigate(PricingPlansActivity.class);
                         }
 
                     } catch (Exception e) {
                         e.printStackTrace();
-                        navigate(VerificationCheckActivity.class);
+                        navigate(PricingPlansActivity.class);
                     }
                 },
                 error -> {
-                    //Toast.makeText(this, "Network error", Toast.LENGTH_LONG).show();
-                    navigate(VerificationCheckActivity.class);
+                    navigate(PricingPlansActivity.class);
                 }
         );
 

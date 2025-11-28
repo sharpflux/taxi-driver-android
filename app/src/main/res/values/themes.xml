@@ -79,4 +79,16 @@
         <!--        <item name="android:textColor">#FFC107</item>-->
     </style>
 
+    <style name="CustomDatePickerTheme" parent="ThemeOverlay.MaterialComponents.MaterialCalendar">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorSurface">?attr/background_color</item>
+        <item name="colorOnSurface">?attr/text_primary_color</item>
+        <item name="colorAccent">@color/accent_color</item>
+        <item name="materialCalendarHeaderConfirmButton">@style/CustomDatePickerButton</item>
+        <item name="materialCalendarHeaderCancelButton">@style/CustomDatePickerButton</item>
+    </style>
+    <style name="CustomDatePickerButton" parent="Widget.MaterialComponents.Button.TextButton">
+        <item name="android:textColor">@color/colorPrimary</item>
+    </style>
 </resources>

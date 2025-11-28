@@ -1,21 +1,178 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:gravity="center"
-    android:orientation="vertical"
-    android:padding="24dp">
+    android:background="#F5F7FA">
 
-    <TextView
-        android:text="Your verification is under review"
-        android:textSize="18sp"
-        android:layout_marginBottom="20dp"
-        android:layout_width="100dp"
-        android:layout_height="100dp"/>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="32dp">
 
-    <Button
-        android:id="@+id/btnRefresh"
-        android:text="Refresh Status"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
-</LinearLayout>
+        <!-- Icon Container -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:layout_marginBottom="32dp"
+            app:cardCornerRadius="60dp"
+            app:cardElevation="8dp"
+            app:cardBackgroundColor="#FFF8E1">
+
+            <ImageView
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:layout_gravity="center"
+                android:src="@android:drawable/ic_dialog_info"
+                app:tint="#FFA726"/>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Main Card -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="4dp"
+            app:cardBackgroundColor="#FFFFFF">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="24dp">
+
+                <!-- Status Title -->
+                <TextView
+                    android:text="Verification Under Review"
+                    android:textSize="24sp"
+                    android:textStyle="bold"
+                    android:textColor="#1A1A1A"
+                    android:gravity="center"
+                    android:layout_marginBottom="8dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"/>
+
+                <!-- Divider -->
+                <View
+                    android:layout_width="60dp"
+                    android:layout_height="3dp"
+                    android:background="#2196F3"
+                    android:layout_gravity="center"
+                    android:layout_marginBottom="20dp"/>
+
+                <!-- Description -->
+                <TextView
+                    android:text="Your account verification is currently being processed. This typically takes 24-48 hours."
+                    android:textSize="15sp"
+                    android:textColor="#666666"
+                    android:gravity="center"
+                    android:lineSpacingExtra="4dp"
+                    android:layout_marginBottom="24dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"/>
+
+                <!-- Urgent Alert Box -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:background="#FFF3E0"
+                    android:padding="16dp"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="24dp">
+
+                    <TextView
+                        android:text="⚠️"
+                        android:textSize="24sp"
+                        android:layout_marginEnd="12dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+
+                    <TextView
+                        android:text="Urgent verification required. Please contact to support team on below email."
+                        android:textSize="14sp"
+                        android:textColor="#E65100"
+                        android:lineSpacingExtra="2dp"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"/>
+                </LinearLayout>
+
+                <!-- Support Section -->
+                <TextView
+                    android:text="Need Help?"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="#1A1A1A"
+                    android:gravity="center"
+                    android:layout_marginBottom="12dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"/>
+
+                <TextView
+                    android:text="Contact our support team for assistance"
+                    android:textSize="14sp"
+                    android:textColor="#666666"
+                    android:gravity="center"
+                    android:layout_marginBottom="12dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"/>
+
+                <!-- Email Box -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:background="#E3F2FD"
+                    android:padding="16dp"
+                    android:gravity="center"
+                    android:layout_marginBottom="24dp">
+
+                    <TextView
+                        android:text="✉️"
+                        android:textSize="20sp"
+                        android:layout_marginEnd="8dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+
+                    <TextView
+                        android:text="support@yourcompany.com"
+                        android:textSize="15sp"
+                        android:textColor="#1565C0"
+                        android:textStyle="bold"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+                </LinearLayout>
+
+                <!-- Refresh Button -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnRefresh"
+                    android:text="Refresh Status"
+                    android:textSize="16sp"
+                    android:textAllCaps="false"
+                    android:paddingVertical="14dp"
+                    app:cornerRadius="8dp"
+                    app:icon="@android:drawable/ic_popup_sync"
+                    app:iconGravity="textStart"
+                    app:iconPadding="8dp"
+                    android:backgroundTint="#2196F3"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"/>
+
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Footer Note -->
+<!--        <TextView-->
+<!--            android:text="This is an automated process. You'll be notified once verification is complete."-->
+<!--            android:textSize="12sp"-->
+<!--            android:textColor="#999999"-->
+<!--            android:gravity="center"-->
+<!--            android:layout_marginTop="24dp"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"/>-->
+
+    </LinearLayout>
+</ScrollView>
