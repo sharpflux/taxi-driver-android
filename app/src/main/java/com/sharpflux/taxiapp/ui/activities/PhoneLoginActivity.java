@@ -22,7 +22,7 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
-import com.sharpflux.taxiapp.R;
+import com.sharpflux.logomobility.R;
 import com.sharpflux.taxiapp.data.network.APIs;
 
 import org.json.JSONException;

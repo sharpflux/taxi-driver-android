@@ -9,7 +9,7 @@ import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.sharpflux.taxiapp.R;
+import com.sharpflux.logomobility.R;
 import com.sharpflux.taxiapp.data.model.BillRequest;
 
 import java.text.SimpleDateFormat;

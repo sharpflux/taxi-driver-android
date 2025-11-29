@@ -14,7 +14,7 @@ import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.sharpflux.taxiapp.R;
+import com.sharpflux.logomobility.R;
 import com.sharpflux.taxiapp.data.model.PricingPlan;
 import com.sharpflux.taxiapp.ui.adapter.PricingAdapter;
 

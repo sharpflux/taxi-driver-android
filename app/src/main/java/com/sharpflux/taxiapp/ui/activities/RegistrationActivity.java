@@ -18,7 +18,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
-import com.sharpflux.taxiapp.R;
+import com.sharpflux.logomobility.R;
 import com.sharpflux.taxiapp.data.model.Customer;
 import com.sharpflux.taxiapp.data.model.Driver;
 import com.sharpflux.taxiapp.data.model.DropdownItem;
@@ -271,6 +271,14 @@ public class RegistrationActivity extends AppCompatActivity {
                     }
                 });
     }
+    private boolean isValidSelection(String enteredText, List<DropdownItem> list) {
+        for (DropdownItem item : list) {
+            if (item.getText().equalsIgnoreCase(enteredText.trim())) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     private boolean validateFields() {
         if (etFirstName.getText().toString().trim().isEmpty()) {
@@ -285,8 +293,9 @@ public class RegistrationActivity extends AppCompatActivity {
             return false;
         }
 
-        if (etEmail.getText().toString().trim().isEmpty()) {
-            etEmail.setError("Email is required");
+        String email = etEmail.getText().toString().trim();
+        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            etEmail.setError("Enter a valid email");
             etEmail.requestFocus();
             return false;
         }
@@ -294,6 +303,19 @@ public class RegistrationActivity extends AppCompatActivity {
         if (etMobileNumber.getText().toString().trim().isEmpty()) {
             etMobileNumber.setError("Mobile number is required");
             etMobileNumber.requestFocus();
+            return false;
+        }
+        String stateText = actvState.getText().toString().trim();
+        if (stateText.isEmpty() || !isValidSelection(stateText, stateList)) {
+            actvState.setError("Select a valid state from dropdown");
+            actvState.requestFocus();
+            return false;
+        }
+
+        String cityText = actvCity.getText().toString().trim();
+        if (cityText.isEmpty() || !isValidSelection(cityText, cityList)) {
+            actvCity.setError("Select a valid city from dropdown");
+            actvCity.requestFocus();
             return false;
         }
 

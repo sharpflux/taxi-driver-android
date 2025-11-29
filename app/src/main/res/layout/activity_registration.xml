@@ -289,7 +289,11 @@
                             android:textColorHint="?attr/text_hint_color"
                             android:background="@null"
                             android:inputType="phone"
-                            android:enabled="false" />
+                            android:focusable="false"
+                            android:focusableInTouchMode="false"
+                            android:cursorVisible="false"
+                            android:longClickable="false"/>
+
                     </LinearLayout>
 
                     <!-- ADDRESS -->

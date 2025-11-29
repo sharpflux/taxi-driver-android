@@ -17,7 +17,7 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.Volley;
-import com.sharpflux.taxiapp.R;
+import com.sharpflux.logomobility.R;
 import com.sharpflux.taxiapp.data.network.APIs;
 
 import org.json.JSONObject;

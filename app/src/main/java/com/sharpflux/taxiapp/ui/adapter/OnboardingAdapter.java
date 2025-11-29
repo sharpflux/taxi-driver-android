@@ -10,7 +10,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.sharpflux.taxiapp.R;
+import com.sharpflux.logomobility.R;
 
 import java.util.List;
 

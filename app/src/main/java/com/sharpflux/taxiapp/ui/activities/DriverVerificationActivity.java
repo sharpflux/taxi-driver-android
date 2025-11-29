@@ -21,7 +21,7 @@ import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.progressindicator.CircularProgressIndicator;
-import com.sharpflux.taxiapp.R;
+import com.sharpflux.logomobility.R;
 
 import org.json.JSONException;
 import org.json.JSONObject;

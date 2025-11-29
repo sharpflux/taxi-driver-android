@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.sharpflux.taxiapp"
+    namespace = "com.sharpflux.logomobility"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.sharpflux.taxiapp"
+        applicationId = "com.sharpflux.logomobility"
         minSdk = 27
         targetSdk = 35
         versionCode = 1

@@ -70,4 +70,6 @@
     <color name="border_color">#3C3C3C</color>
     <color name="icon_tint">#B3B3B3</color>
     <!--    <color name="link_color">#4285F4</color>-->
+
+    <color name="disabled_background">#F5F5F5</color>
 </resources>

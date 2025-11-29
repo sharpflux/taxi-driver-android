@@ -13,7 +13,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 import androidx.core.content.ContextCompat;
 
-import com.sharpflux.taxiapp.R;
+import com.sharpflux.logomobility.R;
 
 public class HelpSupportActivity extends AppCompatActivity {
 

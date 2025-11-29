@@ -31,7 +31,7 @@ import com.razorpay.Checkout;
 import com.razorpay.PaymentData;
 import com.razorpay.PaymentResultListener;
 import com.razorpay.PaymentResultWithDataListener;
-import com.sharpflux.taxiapp.R;
+import com.sharpflux.logomobility.R;
 import com.sharpflux.taxiapp.data.network.APIs;
 
 import org.json.JSONObject;

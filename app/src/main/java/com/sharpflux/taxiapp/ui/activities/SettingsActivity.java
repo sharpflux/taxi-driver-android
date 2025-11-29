@@ -12,7 +12,7 @@ import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.content.ContextCompat;
 
-import com.sharpflux.taxiapp.R;
+import com.sharpflux.logomobility.R;
 
 public class SettingsActivity extends AppCompatActivity {
 

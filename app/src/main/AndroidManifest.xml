@@ -22,7 +22,7 @@
         android:name="android.hardware.camera.autofocus"
         android:required="false" />
     <application
-        android:name=".TaxiApplication"
+        android:name="com.sharpflux.taxiapp.TaxiApplication"
         android:allowBackup="false"
         android:fullBackupContent="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -35,7 +35,7 @@
 
         <!-- SplashActivity is the launcher (entry point) -->
         <activity
-            android:name=".ui.activities.SplashActivity"
+            android:name="com.sharpflux.taxiapp.ui.activities.SplashActivity"
             android:exported="true"
             android:windowSoftInputMode="adjustResize|stateHidden"
             android:theme="@style/Theme.TaxiApp.Splash">
@@ -46,19 +46,19 @@
         </activity>
 
         <activity
-            android:name=".ui.activities.OnboardingActivity"
+            android:name="com.sharpflux.taxiapp.ui.activities.OnboardingActivity"
             android:exported="true"
             android:windowSoftInputMode="adjustResize|stateHidden"
             android:theme="@style/Theme.TaxiApp.NoActionBar"/>
 
         <activity
-            android:name=".ui.activities.LoginActivity"
+            android:name="com.sharpflux.taxiapp.ui.activities.LoginActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize|stateHidden"
             android:theme="@style/Theme.TaxiApp.NoActionBar" />
 
         <activity
-            android:name=".ui.activities.HomeActivity"
+            android:name="com.sharpflux.taxiapp.ui.activities.HomeActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize|stateHidden">
 
@@ -68,89 +68,89 @@
 <!--            </intent-filter>-->
         </activity>
         <activity
-            android:name=".ui.activities.RegistrationActivity"
+            android:name="com.sharpflux.taxiapp.ui.activities.RegistrationActivity"
             android:exported="false"
 
             android:windowSoftInputMode="adjustResize|stateHidden"
             android:theme="@style/Theme.TaxiApp.NoActionBar" />
         <activity
-            android:name=".ui.activities.SignUpActivity"
+            android:name="com.sharpflux.taxiapp.ui.activities.SignUpActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize|stateHidden"
             android:theme="@style/Theme.TaxiApp.NoActionBar" />
         <activity
-            android:name=".ui.activities.ProfileActivity"
+            android:name="com.sharpflux.taxiapp.ui.activities.ProfileActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize|stateHidden"
             android:theme="@style/Theme.TaxiApp.NoActionBar" />
         <activity
-            android:name=".ui.activities.BillActivity"
+            android:name="com.sharpflux.taxiapp.ui.activities.BillActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize|stateHidden"
             android:theme="@style/Theme.TaxiApp.NoActionBar" />
 
         <activity
-            android:name=".ui.activities.QRActivity"
+            android:name="com.sharpflux.taxiapp.ui.activities.QRActivity"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.TaxiApp.NoActionBar"
             android:windowSoftInputMode="adjustResize|stateHidden"
             android:exported="false" />
         <activity
-            android:name=".ui.activities.DriverRegistrationActivity"
+            android:name="com.sharpflux.taxiapp.ui.activities.DriverRegistrationActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize|stateHidden"
             android:theme="@style/Theme.TaxiApp.NoActionBar"/>
         <activity
-            android:name=".ui.activities.BillRequestActivity"
-            android:exported="false"
-            android:windowSoftInputMode="adjustResize|stateHidden"
-            android:theme="@style/Theme.TaxiApp.NoActionBar"/>
-
-        <activity
-            android:name=".ui.activities.PaymentActivity"
+            android:name="com.sharpflux.taxiapp.ui.activities.BillRequestActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize|stateHidden"
             android:theme="@style/Theme.TaxiApp.NoActionBar"/>
 
         <activity
-            android:name=".ui.activities.VerificationCheckActivity"
-            android:exported="false"
-            android:windowSoftInputMode="adjustResize|stateHidden"
-            android:theme="@style/Theme.TaxiApp.NoActionBar"/>
-        <activity
-            android:name=".ui.activities.PhoneLoginActivity"
-            android:exported="false"
-            android:windowSoftInputMode="adjustResize|stateHidden"
-            android:theme="@style/Theme.TaxiApp.NoActionBar"/>
-        <activity
-            android:name=".ui.activities.OtpVerificationActivity"
+            android:name="com.sharpflux.taxiapp.ui.activities.PaymentActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize|stateHidden"
             android:theme="@style/Theme.TaxiApp.NoActionBar"/>
 
         <activity
-            android:name=".ui.activities.DocumentUploadActivity"
+            android:name="com.sharpflux.taxiapp.ui.activities.VerificationCheckActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize|stateHidden"
             android:theme="@style/Theme.TaxiApp.NoActionBar"/>
         <activity
-            android:name=".ui.activities.SettingsActivity"
+            android:name="com.sharpflux.taxiapp.ui.activities.PhoneLoginActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize|stateHidden"
             android:theme="@style/Theme.TaxiApp.NoActionBar"/>
         <activity
-            android:name=".ui.activities.HelpSupportActivity"
-            android:exported="false"
-            android:windowSoftInputMode="adjustResize|stateHidden"
-            android:theme="@style/Theme.TaxiApp.NoActionBar"/>
-        <activity
-            android:name=".ui.activities.RidesActivity"
+            android:name="com.sharpflux.taxiapp.ui.activities.OtpVerificationActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize|stateHidden"
             android:theme="@style/Theme.TaxiApp.NoActionBar"/>
 
         <activity
-            android:name=".ui.activities.PricingPlansActivity"
+            android:name="com.sharpflux.taxiapp.ui.activities.DocumentUploadActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize|stateHidden"
+            android:theme="@style/Theme.TaxiApp.NoActionBar"/>
+        <activity
+            android:name="com.sharpflux.taxiapp.ui.activities.SettingsActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize|stateHidden"
+            android:theme="@style/Theme.TaxiApp.NoActionBar"/>
+        <activity
+            android:name="com.sharpflux.taxiapp.ui.activities.HelpSupportActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize|stateHidden"
+            android:theme="@style/Theme.TaxiApp.NoActionBar"/>
+        <activity
+            android:name="com.sharpflux.taxiapp.ui.activities.RidesActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize|stateHidden"
+            android:theme="@style/Theme.TaxiApp.NoActionBar"/>
+
+        <activity
+            android:name="com.sharpflux.taxiapp.ui.activities.PricingPlansActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize|stateHidden"
             android:theme="@style/Theme.TaxiApp.NoActionBar"/>

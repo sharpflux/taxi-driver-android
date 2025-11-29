@@ -15,7 +15,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.button.MaterialButton;
-import com.sharpflux.taxiapp.R;
+import com.sharpflux.logomobility.R;
 import com.sharpflux.taxiapp.data.model.PricingFeature;
 import com.sharpflux.taxiapp.data.model.PricingPlan;
 import com.sharpflux.taxiapp.ui.activities.PaymentActivity;

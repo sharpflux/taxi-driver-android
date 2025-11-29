@@ -42,7 +42,7 @@ import androidx.core.widget.NestedScrollView;
 
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.datepicker.MaterialDatePicker;
-import com.sharpflux.taxiapp.R;
+import com.sharpflux.logomobility.R;
 import com.sharpflux.taxiapp.data.model.DocumentType;
 import com.sharpflux.taxiapp.data.model.Driver;
 import com.sharpflux.taxiapp.data.model.DropdownItem;
@@ -126,6 +126,7 @@ public class DriverRegistrationActivity extends AppCompatActivity {
     private MaterialCardView cvTermsConditions;
     private ImageView ivTermsCheck;
     private TextView tvTermsStatus;
+    private String verifiedPhoneNumber;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -176,6 +177,18 @@ public class DriverRegistrationActivity extends AppCompatActivity {
         driver.setLocationId(0);
 
         initializeViews();
+
+        // Get verified phone number from intent
+        verifiedPhoneNumber = getIntent().getStringExtra("phone");
+        boolean isPhoneVerified = getIntent().getBooleanExtra("isPhoneVerified", false);
+
+        // Pre-fill and disable phone number field if verified
+        if (verifiedPhoneNumber != null && isPhoneVerified) {
+            etPhoneNumber.setText(verifiedPhoneNumber);
+            etPhoneNumber.setEnabled(false); // Disable editing
+            etPhoneNumber.setFocusable(false);
+            etPhoneNumber.setBackgroundColor(ContextCompat.getColor(this, R.color.disabled_background)); // Optional: visual indicator
+        }
 
         languageContainer = findViewById(R.id.languageContainer);
         btnAddLanguage = findViewById(R.id.btnAddLanguage);
@@ -726,10 +739,14 @@ public class DriverRegistrationActivity extends AppCompatActivity {
             return false;
         }
 
-        if (etPhoneNumber.getText().toString().trim().length() < 10) {
-            etPhoneNumber.setError("Valid 10-digit phone number required");
-            etPhoneNumber.requestFocus();
-            return false;
+        if (verifiedPhoneNumber == null || !etPhoneNumber.isEnabled()) {
+            // Phone is pre-filled and verified
+        } else {
+            if (etPhoneNumber.getText().toString().trim().length() < 10) {
+                etPhoneNumber.setError("Valid 10-digit phone number required");
+                etPhoneNumber.requestFocus();
+                return false;
+            }
         }
         if (etAadhar.getText().toString().trim().length() != 12) {
             etAadhar.setError("Valid 12-digit Aadhar required");
@@ -1025,6 +1042,13 @@ public class DriverRegistrationActivity extends AppCompatActivity {
                 if (success) {
                     Toast.makeText(this, "✅ Registration successful!", Toast.LENGTH_LONG).show();
                     Log.d(TAG, "✅ Registration completed successfully");
+
+                    // Navigate to PricingPlansActivity after successful registration
+                    Intent intent = new Intent(DriverRegistrationActivity.this, PricingPlansActivity.class);
+
+                    // Clear the activity stack so user can't go back to registration
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    startActivity(intent);
                     finish();
                 } else {
                     Toast.makeText(this, "❌ " + message, Toast.LENGTH_LONG).show();

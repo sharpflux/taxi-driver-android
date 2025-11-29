@@ -4,7 +4,7 @@
     "type": "APK",
     "kind": "Directory"
   },
-  "applicationId": "com.sharpflux.taxiapp",
+  "applicationId": "com.sharpflux.logomobility",
   "variantName": "release",
   "elements": [
     {

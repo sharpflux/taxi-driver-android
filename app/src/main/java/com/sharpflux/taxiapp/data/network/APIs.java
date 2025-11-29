@@ -1,16 +1,14 @@
 package com.sharpflux.taxiapp.data.network;
 
 public class   APIs {
-    public static final String Main_URL="https://6kt492jn-7270.inc1.devtunnels.ms/api/";
+    public static final String Main_URL="https://api.logomobility.com/api/";
     public static final String serverUrl ="https://api.logomobility.com/";
 
     public static final String LoginURL = Main_URL + "Auth/Driverlogin";
     public static final String RegisterURL = Main_URL + "Customers/CustomersInsertUpdate";
     public static final String GetCustomersURL = Main_URL + "DriversController1/GetById";
     public static final String SaveBillURL = Main_URL + "CustomerBillRequest/insert-update";
-//    public static final String DriverRegisterURL = Main_URL + "DriversController1/DriverInsertUpdate";
     public static final String DriverRegisterURL = Main_URL + "Driver/DriverInsertUpdate";
-    public static final String GenerateBillPdfURL = Main_URL + "CustomerBillRequest/GenerateCustomerBillPdf";
     public static final String GetBillRequestURL = Main_URL + "CustomerBillRequest/GetByDriverId";
     public static final String UpdateBillApprovalURL = Main_URL + "CustomerBillRequest/insert-update";
     public static final String GetDriversURL = Main_URL + "Driver/DriverGET";

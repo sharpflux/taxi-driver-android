@@ -39,7 +39,7 @@ import com.google.android.gms.common.api.Status;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
-import com.sharpflux.taxiapp.R;
+import com.sharpflux.logomobility.R;
 import com.sharpflux.taxiapp.data.network.APIs;
 //import com.sharpflux.taxiapp.utils.AppSignatureHelper;
 import com.sharpflux.taxiapp.utils.SessionManager;
@@ -495,6 +495,14 @@ public class OtpVerificationActivity extends AppCompatActivity {
                                                         // Clean string
                                                         paymentStatus = paymentStatus == null ? "" : paymentStatus.trim();
                                                         Log.d("PAYMENT_STATUS", "Value = [" + paymentStatus + "]");
+
+                                                        if (statusId == 5) {
+                                                            Intent homeIntent = new Intent(OtpVerificationActivity.this, HomeActivity.class);
+                                                            homeIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                                            startActivity(homeIntent);
+                                                            finish();
+                                                            return;
+                                                        }
 
                                                         if (paymentStatus.equalsIgnoreCase("captured")) {
 

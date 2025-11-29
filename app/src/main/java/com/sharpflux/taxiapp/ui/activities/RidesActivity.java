@@ -12,7 +12,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
-import com.sharpflux.taxiapp.R;
+import com.sharpflux.logomobility.R;
 
 public class RidesActivity extends AppCompatActivity {
 

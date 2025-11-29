@@ -19,8 +19,9 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.Volley;
-import com.sharpflux.taxiapp.R;
+import com.sharpflux.logomobility.R;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 public class SplashActivity extends AppCompatActivity {
@@ -82,24 +83,30 @@ public class SplashActivity extends AppCompatActivity {
                 response -> {
                     try {
                         String paymentStatus = "";
+                        int statusId = -1;
 
                         if (response.length() > 0) {
                             JSONObject obj = response.getJSONObject(0);
                             paymentStatus = obj.optString("PaymentStatus", "");
+                            statusId = obj.optInt("statusId", -1);
                         }
 
                         Log.d("PaymentStatus", "PaymentStatus = " + paymentStatus);
+                        Log.d("StatusId", "statusId = " + statusId);
 
-                        if (paymentStatus.equalsIgnoreCase("captured")) {
-
+                        // Check statusId first
+                        if (statusId == 5) {
+                            // Navigate directly to Home screen
+                            navigate(HomeActivity.class);
+                        } else if (paymentStatus.equalsIgnoreCase("captured")) {
                             navigate(VerificationCheckActivity.class);
                         } else {
-
                             navigate(PricingPlansActivity.class);
                         }
 
-                    } catch (Exception e) {
-                        e.printStackTrace();
+                    } catch (JSONException e) {
+                        Log.e("PaymentStatus", "Error parsing JSON: " + e.getMessage());
+                        // Handle error - maybe navigate to a default screen
                         navigate(PricingPlansActivity.class);
                     }
                 },
