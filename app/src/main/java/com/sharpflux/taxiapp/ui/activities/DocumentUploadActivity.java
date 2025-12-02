@@ -102,7 +102,7 @@ public class DocumentUploadActivity extends AppCompatActivity {
 
         String url = base + driverId;
 
-        System.out.println("📌 Driver Document URL = " + url);
+        System.out.println("Driver Document URL = " + url);
 
         JsonArrayRequest request = new JsonArrayRequest(
                 Request.Method.GET,
@@ -261,6 +261,13 @@ public class DocumentUploadActivity extends AppCompatActivity {
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
         ));
+        btnSubmit.setBackgroundTintList(
+                ContextCompat.getColorStateList(this, R.color.colorPrimary)
+        );
+
+        btnSubmit.setTextColor(
+                ContextCompat.getColor(this, R.color.black)
+        );
 
         LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) btnSubmit.getLayoutParams();
         params.setMargins(32, 32, 32, 32);

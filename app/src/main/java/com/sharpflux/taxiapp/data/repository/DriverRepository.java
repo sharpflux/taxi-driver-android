@@ -54,7 +54,7 @@ public class DriverRepository {
     public void getDropdownData(String searchTerm, int page, int pageSize, int type, int parentId,
                                 DropdownCallback callback) {
 
-        String url = "https://6kt492jn-7270.inc1.devtunnels.ms/api/Utility/allDropdown?" +
+        String url = APIs.GetDropdown +
                 "page=" + page +
                 "&pageSize=" + pageSize +
                 "&type=" + type +
@@ -137,12 +137,12 @@ public class DriverRepository {
             JSONObject params = new JSONObject();
 
             // Basic Info
-            params.put("driversId", 0);
+            params.put("driversId", data.getDriverId());
             params.put("driverCode", data.getDriverCode() != null ? data.getDriverCode() : "DRV" + System.currentTimeMillis());
             params.put("firstName", data.getFirstName());
             params.put("middleName", data.getMiddleName() != null ? data.getMiddleName() : "");
             params.put("lastName", data.getLastName());
-            params.put("emailId", data.getEmailId());
+            params.put("emailId", data.getEmailId() !=null ? data.getEmailId(): " ");
             params.put("phoneNumber", data.getPhoneNumber());
             params.put("passwordHash", data.getPassword());
             params.put("profileImage", JSONObject.NULL);
@@ -180,21 +180,22 @@ public class DriverRepository {
             // Docs
             JSONArray detailsArray = new JSONArray();
             Map<Integer, String> base64Map = data.getDocumentBase64Map();
-
-            if (base64Map != null && !base64Map.isEmpty()) {
-                for (Map.Entry<Integer, String> entry : base64Map.entrySet()) {
-                    JSONObject detailObj = new JSONObject();
-                    detailObj.put("driverDetailId", 0);
-                    detailObj.put("documentTypeId", entry.getKey());
-                    detailObj.put("documentImage", "data:image/jpeg;base64," + entry.getValue());
-                    detailObj.put("documentValidTo", convertToISODateTime(data.getDlValidTo() != null ? data.getDlValidTo() : "2030-12-31"));
-                    detailObj.put("verificationStatusId", 1);
-                    detailObj.put("rejectionReason", JSONObject.NULL);
-                    detailsArray.put(detailObj);
+            if (data.getDriverId() == 0) {
+                if (base64Map != null && !base64Map.isEmpty()) {
+                    for (Map.Entry<Integer, String> entry : base64Map.entrySet()) {
+                        JSONObject detailObj = new JSONObject();
+                        detailObj.put("driverDetailId", 0);
+                        detailObj.put("documentTypeId", entry.getKey());
+                        detailObj.put("documentImage", "data:image/jpeg;base64," + entry.getValue());
+                        detailObj.put("documentValidTo", convertToISODateTime(data.getDlValidTo() != null ? data.getDlValidTo() : "2030-12-31"));
+                        detailObj.put("verificationStatusId", 1);
+                        detailObj.put("rejectionReason", JSONObject.NULL);
+                        detailsArray.put(detailObj);
+                    }
+                } else {
+                    callback.onResult(false, "No documents uploaded");
+                    return;
                 }
-            } else {
-                callback.onResult(false, "No documents uploaded");
-                return;
             }
 
             params.put("details", detailsArray);
@@ -355,8 +356,6 @@ public class DriverRepository {
 
     // GET DRIVER BY ID
     public void getDrivers(int driversId, DriverCallback callback) {
-        SharedPreferences prefs = context.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
-        driversId = prefs.getInt("user_id", 0);
 
         if (driversId <= 0) {
             callback.onError("Invalid driver ID");

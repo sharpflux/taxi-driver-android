@@ -20,6 +20,7 @@ public class   APIs {
     public static final String GetDriverDocument = Main_URL + "Driver/document";
     public static final String UPDATE_DOCUMENT_URL = Main_URL + "Driver/documents/update";
     public static final String GetPayplan =Main_URL + "Pricing/GetPlans";
+    public static final String GetDropdown = Main_URL +"Utility/allDropdown?";
 
 
 

@@ -68,7 +68,7 @@ public class QRActivity extends AppCompatActivity {
 
         initViews();
         setupListeners();
-        setupBottomNavigation();
+        //setupBottomNavigation();
 
         int driverId = getDriverId();
         if (driverId == 0) {
@@ -175,6 +175,6 @@ public class QRActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        bottomNavigationView.setSelectedItemId(R.id.nav_scanner);
+        //bottomNavigationView.setSelectedItemId(R.id.nav_scanner);
     }
 }

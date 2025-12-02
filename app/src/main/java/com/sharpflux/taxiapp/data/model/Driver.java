@@ -176,6 +176,7 @@ public class Driver {
     public void setTermsConditions(boolean termsConditions) { this.termsConditions = termsConditions; }
 
     public boolean isActive() { return isActive; }
+
     public void setIsActive(boolean isActive) { this.isActive = isActive; }
 
     public String getAadharNumber() { return aadharNumber; }

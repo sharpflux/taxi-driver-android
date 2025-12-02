@@ -122,7 +122,7 @@ public class ProfileActivity extends AppCompatActivity {
         if (email != null && !email.isEmpty()) {
             tvUserEmail.setText(email);
         } else {
-            tvUserEmail.setText("Manage your account and preferences");
+            tvUserEmail.setText("Manage your account");
         }
     }
 
@@ -158,7 +158,7 @@ public class ProfileActivity extends AppCompatActivity {
                 .setMessage("Are you sure you want to logout?")
                 .setPositiveButton("Logout", (dialog, which) -> {
 
-                    // ✅ Clear session using UserPreferences
+                    // Clear session using UserPreferences
                     userPreferences.clearSession();
 
                     // Go to login

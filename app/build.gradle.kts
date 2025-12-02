@@ -6,6 +6,7 @@ plugins {
 android {
     namespace = "com.sharpflux.logomobility"
     compileSdk = 35
+    ndkVersion ="29.0.14206865"
 
     defaultConfig {
         applicationId = "com.sharpflux.logomobility"
@@ -15,6 +16,16 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        ndk {
+            abiFilters.clear()
+            abiFilters.add("arm64-v8a")
+            abiFilters.add("armeabi-v7a")
+        }
+    }
+    packagingOptions {
+        jniLibs {
+            useLegacyPackaging = false
+        }
     }
 
     buildTypes {
@@ -53,9 +64,6 @@ dependencies {
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation("com.google.code.gson:gson:2.10.1")
 
-    //firebase
-    implementation(platform("com.google.firebase:firebase-bom:34.4.0"))
-    implementation("com.google.firebase:firebase-analytics")
 
 
     // SignalR

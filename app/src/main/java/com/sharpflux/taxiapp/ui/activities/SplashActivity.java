@@ -83,12 +83,12 @@ public class SplashActivity extends AppCompatActivity {
                 response -> {
                     try {
                         String paymentStatus = "";
-                        int statusId = -1;
+                        int statusId = 0;
 
                         if (response.length() > 0) {
                             JSONObject obj = response.getJSONObject(0);
                             paymentStatus = obj.optString("PaymentStatus", "");
-                            statusId = obj.optInt("statusId", -1);
+                            statusId = obj.optInt("StatusId", 0);
                         }
 
                         Log.d("PaymentStatus", "PaymentStatus = " + paymentStatus);
@@ -96,13 +96,22 @@ public class SplashActivity extends AppCompatActivity {
 
                         // Check statusId first
                         if (statusId == 5) {
-                            // Navigate directly to Home screen
+                            // Go directly to Home
                             navigate(HomeActivity.class);
-                        } else if (paymentStatus.equalsIgnoreCase("captured")) {
-                            navigate(VerificationCheckActivity.class);
-                        } else {
-                            navigate(PricingPlansActivity.class);
+                            finish();
+                            return;   // stop further execution
                         }
+                        else if ("captured".equalsIgnoreCase(paymentStatus)) {
+                            // Payment done, move to verification
+                            navigate(VerificationCheckActivity.class);
+                            finish();
+                        }
+                        else {
+                            // Payment not done or status unknown
+                            navigate(PricingPlansActivity.class);
+                            finish();
+                        }
+
 
                     } catch (JSONException e) {
                         Log.e("PaymentStatus", "Error parsing JSON: " + e.getMessage());

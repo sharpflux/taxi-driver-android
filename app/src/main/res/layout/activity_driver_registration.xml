@@ -200,6 +200,8 @@
                                 android:hint="@string/phone_required"
                                 android:inputType="phone"
                                 android:maxLength="10"
+                                android:autofillHints="phone"
+                                android:importantForAutofill="yes"
                                 android:textColor="?attr/text_primary_color"
                                 android:textColorHint="?attr/text_hint_color" />
                         </com.google.android.material.textfield.TextInputLayout>
@@ -225,6 +227,8 @@
                                 android:hint="@string/aadhar_required"
                                 android:inputType="number"
                                 android:maxLength="12"
+                                android:autofillHints="none"
+                                android:importantForAutofill="no"
                                 android:textColor="?attr/text_primary_color"
                                 android:textColorHint="?attr/text_hint_color" />
                         </com.google.android.material.textfield.TextInputLayout>
@@ -450,8 +454,7 @@
                             app:boxCornerRadiusTopStart="12dp"
                             app:boxCornerRadiusTopEnd="12dp"
                             app:boxCornerRadiusBottomStart="12dp"
-                            app:boxCornerRadiusBottomEnd="12dp"
-                            app:helperText="Required">
+                            app:boxCornerRadiusBottomEnd="12dp">
 
                             <com.google.android.material.textfield.TextInputEditText
                                 android:id="@+id/edtPincode"
@@ -594,8 +597,7 @@
                             app:boxCornerRadiusTopStart="12dp"
                             app:boxCornerRadiusTopEnd="12dp"
                             app:boxCornerRadiusBottomStart="12dp"
-                            app:boxCornerRadiusBottomEnd="12dp"
-                            app:helperText="Required">
+                            app:boxCornerRadiusBottomEnd="12dp">
 
                             <AutoCompleteTextView
                                 android:id="@+id/spnFuelType"

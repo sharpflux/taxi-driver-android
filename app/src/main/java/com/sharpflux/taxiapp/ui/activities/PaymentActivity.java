@@ -505,6 +505,7 @@ public class PaymentActivity extends AppCompatActivity implements PaymentResultW
         swipeRefresh.setRefreshing(true);
 
         String url = GetPaymentdetails + driverId;
+        //int statusId = 0;
 
         RequestQueue queue = Volley.newRequestQueue(this);
 
@@ -514,27 +515,36 @@ public class PaymentActivity extends AppCompatActivity implements PaymentResultW
                 null,
                 response -> {
                     try {
+                        int statusId;
                         if (response.length() > 0) {
 
                             JSONObject obj = response.getJSONObject(0);
                             String status = obj.getString("Status");
-
+                            statusId = obj.optInt("StatusId", 0);
                             Log.d("PAYMENT_STATUS", "Status: " + status);
 
-                            if (status.equalsIgnoreCase("captured")) {
-
-                                Toast.makeText(this, "Payment successful!", Toast.LENGTH_SHORT).show();
-
-                                // Redirect automatically
-                                Intent i = new Intent(this, VerificationCheckActivity.class);
+                            if (statusId == 5) {
+                                // Navigate directly to Home screen
+                                Intent i = new Intent(this, HomeActivity.class);
                                 i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                                 startActivity(i);
                                 finish();
+                                return;
                             }
                             else {
-                                Toast.makeText(this, "Payment pending. Please complete payment.", Toast.LENGTH_SHORT).show();
-                            }
+                                if (status.equalsIgnoreCase("captured")) {
 
+                                    Toast.makeText(this, "Payment successful!", Toast.LENGTH_SHORT).show();
+
+                                    // Redirect automatically
+                                    Intent i = new Intent(this, VerificationCheckActivity.class);
+                                    i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                                    startActivity(i);
+                                    finish();
+                                } else {
+                                    Toast.makeText(this, "Payment pending. Please complete payment.", Toast.LENGTH_SHORT).show();
+                                }
+                            }
                         } else {
                             Toast.makeText(this, "No payment found. Please make a payment.", Toast.LENGTH_SHORT).show();
                         }

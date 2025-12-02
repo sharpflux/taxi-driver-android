@@ -48,7 +48,7 @@ public class RegistrationActivity extends AppCompatActivity {
     private DriverRepository driverRepository;
     private RegistrationRepository registrationRepository;
     private Driver currentDriver;
-    private int driverId = 0; // You can pass this from previous activity via Intent
+    private int driverId = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -160,7 +160,6 @@ public class RegistrationActivity extends AppCompatActivity {
                 });
 
     }
-
     private void bindDriverData(Driver driver) {
         if (driver == null) return;
 
@@ -210,14 +209,26 @@ public class RegistrationActivity extends AppCompatActivity {
     }
 
     private void saveProfile() {
+
         if (!validateFields()) {
             return;
         }
 
         showLoading(true);
 
-        // Create Registration object from form data
-        Registration registration = new Registration();
+        // ✅ Get driverId from SharedPreferences
+        SharedPreferences prefs = getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
+        int driverId = prefs.getInt("user_id", 0);
+
+        if (driverId == 0) {
+            showLoading(false);
+            Toast.makeText(this, "Session expired. Please login again.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Create Registration object
+        Driver registration = new Driver();
+        registration.setDriverId(driverId);
         registration.setFirstName(etFirstName.getText().toString().trim());
         registration.setMiddleName(etMiddleName.getText().toString().trim());
         registration.setLastName(etLastName.getText().toString().trim());
@@ -225,10 +236,8 @@ public class RegistrationActivity extends AppCompatActivity {
         registration.setPhoneNumber(etMobileNumber.getText().toString().trim());
         registration.setAddress(etAddress.getText().toString().trim());
 
-        // Get selected city and state IDs from dropdowns
+        // Get State ID
         int selectedStateId = 0;
-        int selectedCityId = 0;
-        // Find selected state ID
         String selectedStateText = actvState.getText().toString();
         for (DropdownItem item : stateList) {
             if (item.getText().equals(selectedStateText)) {
@@ -236,7 +245,9 @@ public class RegistrationActivity extends AppCompatActivity {
                 break;
             }
         }
-        // Find selected city ID
+
+        // Get City ID
+        int selectedCityId = 0;
         String selectedCityText = actvCity.getText().toString();
         for (DropdownItem item : cityList) {
             if (item.getText().equals(selectedCityText)) {
@@ -244,33 +255,38 @@ public class RegistrationActivity extends AppCompatActivity {
                 break;
             }
         }
+
         registration.setStateId(selectedStateId);
         registration.setCityId(selectedCityId);
         registration.setRoleId(currentDriver != null ? currentDriver.getRoleId() : 1);
-        registration.setActive(true);
+        registration.setIsActive(true);
 
-        registrationRepository.registerUser(registration,
-                new RegistrationRepository.RegistrationCallback() {
-                    @Override
-                    public void onSuccess(JSONObject response) {
-                        showLoading(false);
-                        isEditing = false;
-                        setFieldsEditable(false);
-                        btnSave.setVisibility(View.GONE);
-                        btnEdit.setVisibility(View.VISIBLE);
-                        Toast.makeText(RegistrationActivity.this,
-                                "Profile saved successfully!", Toast.LENGTH_SHORT).show();
-                        loadDriverData();
-                    }
+        //  Call UPDATE API
+        driverRepository.registerDriver(registration,
+                new DriverRepository.RegistrationCallback() {
 
                     @Override
-                    public void onError(String error) {
+                    public void onResult(boolean success, String message) {
                         showLoading(false);
-                        Toast.makeText(RegistrationActivity.this,
-                                "Error saving profile: " + error, Toast.LENGTH_LONG).show();
+
+                        if (success) {
+                            isEditing = false;
+                            setFieldsEditable(false);
+                            btnSave.setVisibility(View.GONE);
+                            btnEdit.setVisibility(View.VISIBLE);
+
+                            Toast.makeText(RegistrationActivity.this,
+                                    "Profile updated successfully!", Toast.LENGTH_SHORT).show();
+
+                            loadDriverData();
+                        } else {
+                            Toast.makeText(RegistrationActivity.this,
+                                    message, Toast.LENGTH_LONG).show();
+                        }
                     }
                 });
     }
+
     private boolean isValidSelection(String enteredText, List<DropdownItem> list) {
         for (DropdownItem item : list) {
             if (item.getText().equalsIgnoreCase(enteredText.trim())) {
