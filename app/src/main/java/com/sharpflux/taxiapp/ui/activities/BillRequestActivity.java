@@ -148,7 +148,7 @@ public class BillRequestActivity extends AppCompatActivity {
                     progressBar.setVisibility(View.GONE);
                     tvEmptyState.setVisibility(View.VISIBLE);
                     tvEmptyState.setText("Error loading bill requests");
-                    Toast.makeText(this, "Error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(this, "Error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
                 }
         ) {
             @Override
@@ -201,6 +201,15 @@ public class BillRequestActivity extends AppCompatActivity {
 
         try {
             billRequestList.clear();
+
+            if (response == null || response.length() == 0) {
+
+                tvEmptyState.setVisibility(View.VISIBLE);
+                tvEmptyState.setText("No bill generated yet");
+
+                recyclerView.setVisibility(View.GONE);
+                return;
+            }
 
             for (int i = 0; i < response.length(); i++) {
                 JSONObject obj = response.getJSONObject(i);
@@ -277,8 +286,8 @@ public class BillRequestActivity extends AppCompatActivity {
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_bill_details, null);
 
         TextView tvRequestId = dialogView.findViewById(R.id.tvRequestId);
-        TextView tvDriverName = dialogView.findViewById(R.id.tvDriverName);
-        TextView tvDriverPhone = dialogView.findViewById(R.id.tvDriverPhone);
+//        TextView tvDriverName = dialogView.findViewById(R.id.tvDriverName);
+//        TextView tvDriverPhone = dialogView.findViewById(R.id.tvDriverPhone);
         TextView tvCustomerName = dialogView.findViewById(R.id.tvCustomerName);
         TextView tvCustomerPhone = dialogView.findViewById(R.id.tvCustomerPhone);
         TextView tvPickFrom = dialogView.findViewById(R.id.tvPickFrom);
@@ -295,8 +304,8 @@ public class BillRequestActivity extends AppCompatActivity {
 //        android.widget.Button btnReject = dialogView.findViewById(R.id.btnReject);
 
         tvRequestId.setText("Request #" + billRequest.getRequestID());
-        tvDriverName.setText(billRequest.getDriverName());
-        tvDriverPhone.setText(billRequest.getDriverPhone());
+//        tvDriverName.setText(billRequest.getDriverName());
+//        tvDriverPhone.setText(billRequest.getDriverPhone());
         tvCustomerName.setText(billRequest.getCustomerName());
         tvCustomerPhone.setText(billRequest.getCustomerPhone());
         tvPickFrom.setText(billRequest.getPickFrom());

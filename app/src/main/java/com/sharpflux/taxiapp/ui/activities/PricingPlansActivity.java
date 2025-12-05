@@ -5,7 +5,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.android.volley.Request;
@@ -26,11 +29,34 @@ public class PricingPlansActivity extends AppCompatActivity {
 
     RecyclerView recyclerView;
     PricingAdapter pricingAdapter;
+    private String userName;
+    private String userPhone;
+    private String userEmail;
+    private int userId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_pricing_plans);
+
+        // ✅ Get data from Intent
+        Intent receivedIntent = getIntent();
+        userName = receivedIntent.getStringExtra("userName");
+        userPhone = receivedIntent.getStringExtra("userPhone");
+        userEmail = receivedIntent.getStringExtra("userEmail");
+        userId = receivedIntent.getIntExtra("userId", 0);
+
+        // ✅ Fallback to SharedPreferences if Intent data is null
+        if (userName == null || userName.isEmpty()) {
+            SharedPreferences prefs = getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
+            userName = prefs.getString("user_name", "");
+            userPhone = prefs.getString("user_phone", "");
+            userEmail = prefs.getString("user_email", "");
+            userId = prefs.getInt("user_id", 0);
+            Log.d("PricingPlans", "Loaded from SharedPreferences");
+        }
+
+        Log.d("PricingPlans", "Received - Name: " + userName + ", Phone: " + userPhone);
 
         recyclerView = findViewById(R.id.recyclerPlans);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -55,7 +81,7 @@ public class PricingPlansActivity extends AppCompatActivity {
                                 new TypeToken<List<PricingPlan>>(){}.getType()
                         );
 
-                        pricingAdapter = new PricingAdapter(PricingPlansActivity.this, list);
+                        pricingAdapter = new PricingAdapter(PricingPlansActivity.this, list,userName, userPhone, userEmail,userId);
                         recyclerView.setAdapter(pricingAdapter);
 
                     } catch (Exception e) {

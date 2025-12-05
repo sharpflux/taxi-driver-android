@@ -67,8 +67,8 @@ public class DriverVerificationActivity extends AppCompatActivity {
         }
 
         tvTitle = findViewById(R.id.tvTitle);
-        cardVerification = findViewById(R.id.cardVerification);
-        cardPayment = findViewById(R.id.cardPayment);
+//        cardVerification = findViewById(R.id.cardVerification);
+//        cardPayment = findViewById(R.id.cardPayment);
 //        progressIndicator = findViewById(R.id.progressIndicator);
 
         requestQueue = Volley.newRequestQueue(this);

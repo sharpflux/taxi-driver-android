@@ -193,7 +193,7 @@ public class DriverRepository {
                         detailsArray.put(detailObj);
                     }
                 } else {
-                    callback.onResult(false, "No documents uploaded");
+                    callback.onResult(false, "No documents uploaded",0);
                     return;
                 }
             }
@@ -223,7 +223,7 @@ public class DriverRepository {
             sendDriverRequest(params, callback);
 
         } catch (JSONException e) {
-            callback.onResult(false, "Invalid JSON: " + e.getMessage());
+            callback.onResult(false, "Invalid JSON: " + e.getMessage(),0);
         }
     }
 
@@ -234,16 +234,41 @@ public class DriverRepository {
                 params.toString(),
                 response -> {
                     try {
+                        Log.d(TAG, "✅ Registration Response: " + response.toString());
+
                         boolean success = response.optBoolean("success", true);
                         String message = response.optString("message", "Driver registered successfully!");
-                        callback.onResult(success, message);
+
+                        // ✅ Extract DriversId from response
+                        int driverId = 0;
+
+                        // Check if response has a data object
+                        if (response.has("data")) {
+                            JSONObject data = response.getJSONObject("data");
+                            driverId = data.optInt("driversId", 0);
+                        }
+                        // Or check if DriversId is directly in response
+                        else if (response.has("driversId")) {
+                            driverId = response.getInt("driversId");
+                        }
+                        // Or check for driverId (lowercase)
+                        else if (response.has("driverId")) {
+                            driverId = response.getInt("driverId");
+                        }
+
+                        Log.d(TAG, "✅ Extracted DriversId: " + driverId);
+
+                        callback.onResult(success, message, driverId);
+
                     } catch (Exception e) {
-                        callback.onResult(true, "Registration completed");
+                        Log.e(TAG, "Error parsing registration response", e);
+                        callback.onResult(true, "Registration completed", 0);
                     }
                 },
                 error -> {
                     String errorMsg = parseVolleyError(error);
-                    callback.onResult(false, errorMsg);
+                    Log.e(TAG, "Registration request failed: " + errorMsg);
+                    callback.onResult(false, errorMsg, 0);
                 }
         );
 
@@ -453,7 +478,7 @@ public class DriverRepository {
     }
 
     public interface RegistrationCallback {
-        void onResult(boolean success, String message);
+        void onResult(boolean success, String message, int driverId);
     }
 
     public interface DocumentTypeCallback {

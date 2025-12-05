@@ -2,6 +2,7 @@ package com.sharpflux.taxiapp.ui.activities;
 
 import android.app.DatePickerDialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.ImageDecoder;
@@ -1034,7 +1035,7 @@ public class DriverRegistrationActivity extends AppCompatActivity {
         Log.d(TAG, "Documents count: " + base64Map.size());
         Log.d(TAG, "Terms Accepted: " + termsAccepted);
 
-        repository.registerDriver(driver, (success, message) -> {
+        repository.registerDriver(driver, (success, message,driverId) -> {
             runOnUiThread(() -> {
                 btnRegister.setEnabled(true);
                 btnRegister.setText("Register as Driver");
@@ -1042,14 +1043,39 @@ public class DriverRegistrationActivity extends AppCompatActivity {
                 if (success) {
                     Toast.makeText(this, "✅ Registration successful!", Toast.LENGTH_LONG).show();
                     Log.d(TAG, "✅ Registration completed successfully");
+                    Log.d(TAG, "✅ Driver ID: " + driverId);
 
-                    // Navigate to PricingPlansActivity after successful registration
+
+                    // Build full name
+                    String fullName = driver.getFirstName() + " " +
+                            (driver.getMiddleName() != null && !driver.getMiddleName().isEmpty()
+                                    ? driver.getMiddleName() + " " : "") +
+                            driver.getLastName();
+
+                    // ✅ SAVE TO SHARED PREFERENCES (BACKUP)
+                    SharedPreferences prefs = getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
+                    SharedPreferences.Editor editor = prefs.edit();
+                    editor.putString("user_name", fullName);
+                    editor.putString("user_phone", driver.getPhoneNumber());
+                    editor.putString("user_email", driver.getEmailId() != null ? driver.getEmailId() : "");
+                    editor.putInt("user_id", driverId);
+                    editor.apply();
+
+                    Log.d(TAG, "User details saved to SharedPreferences");
+
+                    // Navigate to PricingPlansActivity with user details
                     Intent intent = new Intent(DriverRegistrationActivity.this, PricingPlansActivity.class);
+                    intent.putExtra("userName", fullName);
+                    intent.putExtra("userPhone", driver.getPhoneNumber());
+                    intent.putExtra("userEmail", driver.getEmailId() != null ? driver.getEmailId() : "");
+                    intent.putExtra("userId", driverId);
 
-                    // Clear the activity stack so user can't go back to registration
+                    Log.d(TAG, "Passing to PricingPlans - Name: " + fullName + ", Phone: " + driver.getPhoneNumber() + ", ID: " + driverId);
+
                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                     startActivity(intent);
                     finish();
+
                 } else {
                     Toast.makeText(this, "❌ " + message, Toast.LENGTH_LONG).show();
                     Log.e(TAG, "❌ Registration failed: " + message);

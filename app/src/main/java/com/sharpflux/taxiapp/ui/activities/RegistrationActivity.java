@@ -266,7 +266,7 @@ public class RegistrationActivity extends AppCompatActivity {
                 new DriverRepository.RegistrationCallback() {
 
                     @Override
-                    public void onResult(boolean success, String message) {
+                    public void onResult(boolean success, String message,int driverId) {
                         showLoading(false);
 
                         if (success) {

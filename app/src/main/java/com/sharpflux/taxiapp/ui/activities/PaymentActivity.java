@@ -130,14 +130,24 @@ public class PaymentActivity extends AppCompatActivity implements PaymentResultW
         btnProceedPayment = findViewById(R.id.btnProceedPayment);
         progressBar = findViewById(R.id.progressBar);
 
-        // Access SharedPreferences
-        SharedPreferences prefs = getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
+        Intent intent = getIntent();
+        String userName = intent.getStringExtra("userName");
+        String userPhone = intent.getStringExtra("userPhone");
+        String userEmail = intent.getStringExtra("userEmail");
+        int userId = intent.getIntExtra("userId", 0);
 
-        // Retrieve stored values
-        String userName = prefs.getString("user_name", "");
-        String userEmail = prefs.getString("user_email", "");
-        String userPhone = prefs.getString("user_phone", "");
-        int userId = prefs.getInt("user_id", 0);
+        if (userName == null || userName.isEmpty()) {
+            SharedPreferences prefs = getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
+            userName = prefs.getString("user_name", "");
+            userPhone = prefs.getString("user_phone", "");
+            userEmail = prefs.getString("user_email", "");
+            userId = prefs.getInt("user_id", 0);
+        }
+        // Store in instance variables for later use
+        driverName = userName;
+        driverPhone = userPhone;
+        driverEmail = userEmail;
+        driverId = userId;
 
         // Assign values to EditTexts
         etName.setText(userName);
@@ -147,13 +157,15 @@ public class PaymentActivity extends AppCompatActivity implements PaymentResultW
        // etUserId.setText(userId);
 
 
+        // Get the final amount from intent
+        Intent i = getIntent();
+        finalAmount = i.getDoubleExtra("finalAmount", 0.0);
+        etAmount.setText(String.valueOf(finalAmount));
+
         etName.setEnabled(false);
         //etEmail.setEnabled(false);
         etPhone.setEnabled(false);
         etAmount.setEnabled(false);
-
-        // driver/user ID
-        //driverId = userId;
 
         // log for debugging
         Log.d("PaymentActivity", "Prefilled from SharedPref - Name: " + userName + ", Email: " + userEmail + ", Phone: " + userPhone);
@@ -389,15 +401,15 @@ public class PaymentActivity extends AppCompatActivity implements PaymentResultW
             // 🟢 Get driverId and token from SharedPreferences
             SharedPreferences prefs = getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
             int driverId = prefs.getInt("user_id", 0);
-            String token = prefs.getString("authToken", "");
+            //String token = prefs.getString("authToken", "");
 
-            if (driverId == 0) {
-                Log.w("VERIFY_PAY", "⚠ driverId not found in SharedPreferences");
-            }
-
-            if (token.isEmpty()) {
-                Log.w("VERIFY_PAY", "⚠ JWT token not found in SharedPreferences");
-            }
+//            if (driverId == 0) {
+//                Log.w("VERIFY_PAY", "⚠ driverId not found in SharedPreferences");
+//            }
+//
+//            if (token.isEmpty()) {
+//                Log.w("VERIFY_PAY", "⚠ JWT token not found in SharedPreferences");
+//            }
 
             body.put("driverId", driverId);
 
@@ -448,7 +460,7 @@ public class PaymentActivity extends AppCompatActivity implements PaymentResultW
                 @Override
                 public Map<String, String> getHeaders() {
                     Map<String, String> headers = new HashMap<>();
-                    headers.put("Authorization", "Bearer " + token);
+                   // headers.put("Authorization", "Bearer " + token);
                     headers.put("Content-Type", "application/json");
                     return headers;
                 }

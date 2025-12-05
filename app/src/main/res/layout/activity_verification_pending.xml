@@ -131,19 +131,22 @@
                     android:layout_marginBottom="24dp">
 
                     <TextView
-                        android:text="✉️"
+                        android:text="🌐"
                         android:textSize="20sp"
                         android:layout_marginEnd="8dp"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"/>
 
                     <TextView
-                        android:text="support@yourcompany.com"
+                        android:text="https://logomobility.com/support"
                         android:textSize="15sp"
-                        android:textColor="#1565C0"
                         android:textStyle="bold"
+                        android:textColorLink="#07A8FF"
+                        android:autoLink="web"
+                        android:linksClickable="true"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"/>
+                        android:layout_height="wrap_content" />
+
                 </LinearLayout>
 
                 <!-- Refresh Button -->
@@ -157,7 +160,7 @@
                     app:icon="@android:drawable/ic_popup_sync"
                     app:iconGravity="textStart"
                     app:iconPadding="8dp"
-                    android:backgroundTint="#2196F3"
+                    android:backgroundTint="@color/colorPrimary"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"/>
 

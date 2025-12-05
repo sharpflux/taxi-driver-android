@@ -26,10 +26,19 @@ public class PricingAdapter extends RecyclerView.Adapter<PricingAdapter.ViewHold
 
     Context context;
     List<PricingPlan> list;
+    private String userName;
+    private String userPhone;
+    private String userEmail;
+    private int userId;
 
-    public PricingAdapter(Context context, List<PricingPlan> list) {
+    public PricingAdapter(Context context, List<PricingPlan> list,
+                          String userName, String userPhone, String userEmail, int userId) {
         this.context = context;
         this.list = list;
+        this.userName = userName;
+        this.userPhone = userPhone;
+        this.userEmail = userEmail;
+        this.userId = userId;
     }
 
     @NonNull
@@ -38,6 +47,17 @@ public class PricingAdapter extends RecyclerView.Adapter<PricingAdapter.ViewHold
         View view = LayoutInflater.from(context)
                 .inflate(R.layout.item_pricing_plan, parent, false);
         return new ViewHolder(view);
+    }
+
+    private int getThemeColor(int attr) {
+        android.util.TypedValue typedValue = new android.util.TypedValue();
+        context.getTheme().resolveAttribute(attr, typedValue, true);
+
+        if (typedValue.resourceId != 0) {
+            return androidx.core.content.ContextCompat.getColor(context, typedValue.resourceId);
+        } else {
+            return typedValue.data;
+        }
     }
 
     @Override
@@ -84,8 +104,8 @@ public class PricingAdapter extends RecyclerView.Adapter<PricingAdapter.ViewHold
             h.txtOriginalPrice.setPaintFlags(0);
             h.txtOriginalPrice.setText("₹" + p.originalPrice);
             h.txtOriginalPrice.setTextSize(22);
-            h.txtOriginalPrice.setTextColor(Color.BLACK);
-            h.txtOriginalPrice.setTypeface(null, android.graphics.Typeface.BOLD);
+            h.txtOriginalPrice.setTextColor(getThemeColor(R.attr.text_primary_color));
+            //h.txtOriginalPrice.setTypeface(null, android.graphics.Typeface.BOLD);
 
             // HIDE DISCOUNT PRICE ROW COMPLETELY
             h.txtCurrency.setVisibility(View.GONE);
@@ -102,7 +122,7 @@ public class PricingAdapter extends RecyclerView.Adapter<PricingAdapter.ViewHold
             TextView tv = new TextView(context);
             tv.setText("• " + f.featureText);
             tv.setTextSize(14);
-            tv.setTextColor(Color.parseColor("#444444"));
+            tv.setTextColor(getThemeColor(R.attr.text_primary_color));
             tv.setPadding(0, 6, 0, 0);
             h.layoutFeatures.addView(tv);
         }
@@ -119,6 +139,11 @@ public class PricingAdapter extends RecyclerView.Adapter<PricingAdapter.ViewHold
             // Decide final payable amount
             double finalAmount = (p.discountPercent > 0) ? p.discountedPrice : p.originalPrice;
             i.putExtra("finalAmount", finalAmount);
+
+            i.putExtra("userName", userName);
+            i.putExtra("userPhone", userPhone);
+            i.putExtra("userEmail", userEmail);
+            i.putExtra("userId", userId);
 
             context.startActivity(i);
         });
