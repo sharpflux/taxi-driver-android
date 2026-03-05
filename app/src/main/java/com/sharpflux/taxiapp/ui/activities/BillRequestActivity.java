@@ -223,10 +223,10 @@ public class BillRequestActivity extends AppCompatActivity {
                 billRequest.setDriverName(obj.optString("DriverName", ""));
                 billRequest.setDriverPhone(obj.optString("DriverPhone", ""));
                 billRequest.setApprovalId(obj.optInt("ApprovalId", 0));
-                billRequest.setPickFrom(obj.optString("pickFrom", ""));
-                billRequest.setDropAt(obj.optString("dropAt", ""));
-                billRequest.setDistance(obj.optInt("distance", 0));
-                billRequest.setFare(obj.optDouble("fare", 0.0));
+                billRequest.setPickFrom(obj.optString("PickFrom", ""));
+                billRequest.setDropAt(obj.optString("DropAt", ""));
+                billRequest.setDistance(obj.optInt("Distance", 0));
+                billRequest.setFare(obj.optDouble("Fare", 0.0));
                 billRequest.setParkingCharges(obj.optDouble("Parking Charges", 0.0));
                 billRequest.setWaitingCharges(obj.optDouble("Waiting Charges", 0.0));
                 billRequest.setTollTax(obj.optDouble("Toll Tax", 0.0));

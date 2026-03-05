@@ -283,6 +283,7 @@ public class PaymentActivity extends AppCompatActivity implements PaymentResultW
                             String orderId = response.getString("orderId");
                             String key = response.getString("key");
                             int amountPaise = response.getInt("amount");
+                            int planId = response.getInt("planId");
 
                             Log.d(TAG, "Order created successfully. OrderId: " + orderId);
 

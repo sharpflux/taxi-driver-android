@@ -310,7 +310,7 @@ public class RegistrationActivity extends AppCompatActivity {
         }
 
         String email = etEmail.getText().toString().trim();
-        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+        if (!email.isEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
             etEmail.setError("Enter a valid email");
             etEmail.requestFocus();
             return false;
