@@ -43,7 +43,7 @@ public class BillRequestAdapter extends RecyclerView.Adapter<BillRequestAdapter.
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         BillRequest billRequest = billRequests.get(position);
 
-        holder.tvDriverName.setText(billRequest.getDriverName());
+        holder.tvCustomerName.setText(billRequest.getCustomerName());
         holder.tvBillDate.setText(formatDate(billRequest.getBillDate()));
         holder.tvTotal.setText(String.format("₹ %.2f", billRequest.getTotal()));
         holder.tvRoute.setText(billRequest.getPickFrom() + " → " + billRequest.getDropAt());
@@ -79,12 +79,12 @@ public class BillRequestAdapter extends RecyclerView.Adapter<BillRequestAdapter.
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         CardView cardView;
-        TextView tvDriverName, tvBillDate, tvTotal, tvRoute;
+        TextView tvCustomerName, tvBillDate, tvTotal, tvRoute;
 
         ViewHolder(View itemView) {
             super(itemView);
             cardView = itemView.findViewById(R.id.cardView);
-            tvDriverName = itemView.findViewById(R.id.tvDriverName);
+            tvCustomerName = itemView.findViewById(R.id.tvCustomerName);
             tvBillDate = itemView.findViewById(R.id.tvBillDate);
             tvTotal = itemView.findViewById(R.id.tvTotal);
             tvRoute = itemView.findViewById(R.id.tvRoute);

@@ -15,7 +15,11 @@ public class OtpData {
     @SerializedName("timestamp")
     private String timestamp;
 
+    @SerializedName("totalAmount")
+    private double totalAmount;
 
+    @SerializedName("distance")
+    private double distance;
     public OtpData() {
         // Default constructor for Gson
     }
@@ -25,6 +29,8 @@ public class OtpData {
         this.otp = otp;
         this.driverId = driverId;
         this.timestamp = timestamp;
+        this.totalAmount = totalAmount;
+        this.distance = distance;
     }
 
     public int getRequestId() {
@@ -55,10 +61,12 @@ public class OtpData {
         return timestamp;
     }
 
-    public void setTimestamp(String timestamp) {
-        this.timestamp = timestamp;
-    }
+    public void setTimestamp(String timestamp) { this.timestamp = timestamp; }
+    public double getTotalAmount() { return totalAmount; }
+    public void setTotalAmount(double totalAmount) { this.totalAmount = totalAmount; }
 
+    public double getDistance() { return distance; }
+    public void setDistance(double distance) { this.distance = distance; }
     @Override
     public String toString() {
         return "OtpData{" +
@@ -66,6 +74,8 @@ public class OtpData {
                 ", otp='" + otp + '\'' +
                 ", driverId=" + driverId +
                 ", timestamp='" + timestamp + '\'' +
+                ", totalAmount=" + totalAmount +
+                ", distance=" + distance +
                 '}';
     }
 }

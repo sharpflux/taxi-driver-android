@@ -289,7 +289,7 @@ public class BillRequestActivity extends AppCompatActivity {
 //        TextView tvDriverName = dialogView.findViewById(R.id.tvDriverName);
 //        TextView tvDriverPhone = dialogView.findViewById(R.id.tvDriverPhone);
         TextView tvCustomerName = dialogView.findViewById(R.id.tvCustomerName);
-        TextView tvCustomerPhone = dialogView.findViewById(R.id.tvCustomerPhone);
+//        TextView tvCustomerPhone = dialogView.findViewById(R.id.tvCustomerPhone);
         TextView tvPickFrom = dialogView.findViewById(R.id.tvPickFrom);
         TextView tvDropAt = dialogView.findViewById(R.id.tvDropAt);
         TextView tvDistance = dialogView.findViewById(R.id.tvDistance);
@@ -307,7 +307,7 @@ public class BillRequestActivity extends AppCompatActivity {
 //        tvDriverName.setText(billRequest.getDriverName());
 //        tvDriverPhone.setText(billRequest.getDriverPhone());
         tvCustomerName.setText(billRequest.getCustomerName());
-        tvCustomerPhone.setText(billRequest.getCustomerPhone());
+//        tvCustomerPhone.setText(billRequest.getCustomerPhone());
         tvPickFrom.setText(billRequest.getPickFrom());
         tvDropAt.setText(billRequest.getDropAt());
         tvDistance.setText(billRequest.getDistance() + " km");

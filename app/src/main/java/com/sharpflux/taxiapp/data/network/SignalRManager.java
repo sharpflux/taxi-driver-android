@@ -6,13 +6,15 @@ import com.microsoft.signalr.HubConnectionBuilder;
 import com.microsoft.signalr.HubConnectionState;
 import com.google.gson.Gson;
 import com.sharpflux.taxiapp.data.model.OtpData;
-import io.reactivex.rxjava3.core.Single;
+
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class SignalRManager {
     private static final String TAG = "SignalRManager";
     private static SignalRManager instance;
     private HubConnection hubConnection;
-    private OtpListener otpListener;
+    private final List<OtpListener> otpListeners = new CopyOnWriteArrayList<>();
     private Gson gson = new Gson();
 
     private SignalRManager() {}
@@ -25,33 +27,70 @@ public class SignalRManager {
     }
 
     public interface OtpListener {
-        void onOtpReceived(int requestId, String otp, int driverId, String timestamp);
+        void onOtpReceived(int requestId, String otp, int driverId,
+                           String timestamp, double totalAmount, double distance);
         void onConnectionStateChanged(boolean isConnected);
         void onError(Exception exception);
     }
 
+    public void addOtpListener(OtpListener listener) {
+        if (listener != null && !otpListeners.contains(listener)) {
+            otpListeners.add(listener);
+            Log.d(TAG, "Listener added. Total listeners: " + otpListeners.size());
+        }
+    }
+
+    public void removeOtpListener(OtpListener listener) {
+        if (listener != null) {
+            otpListeners.remove(listener);
+            Log.d(TAG, "Listener removed. Total listeners: " + otpListeners.size());
+        }
+    }
+
+    @Deprecated
     public void setOtpListener(OtpListener listener) {
-        this.otpListener = listener;
+        otpListeners.clear();
+        if (listener != null) {
+            otpListeners.add(listener);
+        }
+    }
+
+    private void notifyOtpReceived(int requestId, String otp, int driverId,
+                                   String timestamp, double totalAmount, double distance) {
+        for (OtpListener listener : otpListeners) {
+            listener.onOtpReceived(requestId, otp, driverId, timestamp, totalAmount, distance);
+        }
+    }
+
+    private void notifyConnectionStateChanged(boolean isConnected) {
+        for (OtpListener listener : otpListeners) {
+            listener.onConnectionStateChanged(isConnected);
+        }
+    }
+
+    private void notifyError(Exception e) {
+        for (OtpListener listener : otpListeners) {
+            listener.onError(e);
+        }
     }
 
     public void connect(String serverUrl, int driverId) {
         try {
-            if (hubConnection != null && hubConnection.getConnectionState() == HubConnectionState.CONNECTED) {
+            if (hubConnection != null &&
+                    hubConnection.getConnectionState() == HubConnectionState.CONNECTED) {
                 Log.d(TAG, "Already connected");
                 return;
             }
 
-            // Ensure serverUrl doesn't end with slash
             if (serverUrl.endsWith("/")) {
                 serverUrl = serverUrl.substring(0, serverUrl.length() - 1);
             }
             final String finalServerUrl = serverUrl;
             String hubUrl = serverUrl + "/OtpHub";
-            Log.d("URL", "Connecting to: " + hubUrl);
+            Log.d(TAG, "Connecting to: " + hubUrl);
 
-            // Build hub connection with increased timeout
             hubConnection = HubConnectionBuilder.create(hubUrl)
-                    .withHandshakeResponseTimeout(60000) // Increased to 60 seconds
+                    .withHandshakeResponseTimeout(60000)
                     .build();
 
             hubConnection.on("ReceiveOtp", (otpDataObj) -> {
@@ -61,82 +100,65 @@ public class SignalRManager {
 
                     OtpData otpData = gson.fromJson(json, OtpData.class);
 
-                    if (otpListener != null) {
-                        otpListener.onOtpReceived(
-                                otpData.getRequestId(),
-                                otpData.getOtp(),
-                                otpData.getDriverId(),
-                                otpData.getTimestamp()
-                        );
-                    }
+                    notifyOtpReceived(
+                            otpData.getRequestId(),
+                            otpData.getOtp(),
+                            otpData.getDriverId(),
+                            otpData.getTimestamp(),
+                            otpData.getTotalAmount(),
+                            otpData.getDistance()
+                    );
                 } catch (Exception e) {
                     Log.e(TAG, "Error parsing OTP data", e);
-                    if (otpListener != null) otpListener.onError(e);
+                    notifyError(e);
                 }
             }, Object.class);
 
-
-
-            // Register driver registered confirmation
             hubConnection.on("DriverRegistered", (dId) -> {
                 Log.d(TAG, "Driver registered with ID: " + dId);
             }, Integer.class);
 
-            // Handle connection state changes
             hubConnection.onClosed((error) -> {
-                Log.d(TAG, "Connection closed" + (error != null ? ": " + error.getMessage() : ""));
-                if (otpListener != null) {
-                    otpListener.onConnectionStateChanged(false);
-                }
-                // Auto-reconnect after 5 seconds
+                Log.d(TAG, "Connection closed" +
+                        (error != null ? ": " + error.getMessage() : ""));
+                notifyConnectionStateChanged(false);
                 reconnect(finalServerUrl, driverId, 5000);
             });
 
-            // Start connection
             startConnection(driverId);
         } catch (Exception e) {
             Log.e(TAG, "Error in connect method", e);
-            e.printStackTrace();
-            if (otpListener != null) {
-                otpListener.onError(e);
-            }
+            notifyError(e);
         }
     }
 
     private void startConnection(int driverId) {
         hubConnection.start()
                 .doOnComplete(() -> {
-                    String connectionId = hubConnection.getConnectionId();
-                    Log.d(TAG, "✅ Connected to SignalR hub. ConnectionId: " + connectionId);
-                    Log.d(TAG, "✅ Connected to SignalR hub successfully");
+                    Log.d(TAG, "✅ Connected. ConnectionId: " + hubConnection.getConnectionId());
+
                     if (hubConnection.getConnectionState() == HubConnectionState.CONNECTED) {
-                        // Register driver with the hub
                         hubConnection.invoke("RegisterDriver", driverId)
-                                .doOnComplete(() -> Log.d(TAG, "✅ Driver " + driverId + " registered successfully"))
-                                .doOnError(error -> {
-                                    Log.e(TAG, "❌ Failed to register driver", error);
-                                    error.printStackTrace();
-                                })
+                                .doOnComplete(() ->
+                                        Log.d(TAG, "✅ Driver " + driverId + " registered"))
+                                .doOnError(error ->
+                                        Log.e(TAG, "❌ Failed to register driver", error))
                                 .subscribe();
 
-                        if (otpListener != null) {
-                            otpListener.onConnectionStateChanged(true);
-                        }
+                        notifyConnectionStateChanged(true);
                     }
                 })
                 .doOnError(error -> {
-                    Log.e(TAG, "❌ Failed to connect to SignalR hub", error);
-                    error.printStackTrace();
-                    if (otpListener != null) {
-                        otpListener.onError(new Exception(error));
-                    }
+                    Log.e(TAG, "❌ Failed to connect", error);
+                    notifyError(new Exception(error));
                 })
                 .subscribe();
     }
 
     private void reconnect(String serverUrl, int driverId, long delayMillis) {
         new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
-            if (hubConnection == null || hubConnection.getConnectionState() == HubConnectionState.DISCONNECTED) {
+            if (hubConnection == null ||
+                    hubConnection.getConnectionState() == HubConnectionState.DISCONNECTED) {
                 Log.d(TAG, "🔄 Attempting to reconnect...");
                 connect(serverUrl, driverId);
             }
@@ -155,8 +177,8 @@ public class SignalRManager {
                 hubConnection.getConnectionState() == HubConnectionState.CONNECTED;
     }
 
-    // Add this method for testing
     public HubConnectionState getConnectionState() {
-        return hubConnection != null ? hubConnection.getConnectionState() : HubConnectionState.DISCONNECTED;
+        return hubConnection != null ?
+                hubConnection.getConnectionState() : HubConnectionState.DISCONNECTED;
     }
 }

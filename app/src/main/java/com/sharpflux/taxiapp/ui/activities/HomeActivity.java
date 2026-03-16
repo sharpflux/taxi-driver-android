@@ -36,9 +36,10 @@ public class HomeActivity extends AppCompatActivity {
     private static final String CHANNEL_ID = "OTP_CHANNEL";
 
     private SignalRManager signalRManager;
+    private SignalRManager.OtpListener otpListener; // ✅ stored reference for clean removal
     private int driverId;
     private TextView txtWelcome, txtGreeting;
-    private CardView cardScanQR,cardProfileIcon, cardNotifications;
+    private CardView cardScanQR, cardProfileIcon, cardNotifications;
     private BottomNavigationView bottomNavigationView;
 
     @Override
@@ -49,19 +50,18 @@ public class HomeActivity extends AppCompatActivity {
         }
         setContentView(R.layout.activity_home);
 
-        //notification bar
+        // Notification bar styling
         Window window = getWindow();
         if ((getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK)
                 == Configuration.UI_MODE_NIGHT_YES) {
-            // Dark mode
             window.setStatusBarColor(ContextCompat.getColor(this, R.color.black));
-            window.getDecorView().setSystemUiVisibility(0); // remove light icons flag
+            window.getDecorView().setSystemUiVisibility(0);
         } else {
-            // Light mode
             window.setStatusBarColor(ContextCompat.getColor(this, R.color.white));
             window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
         }
-        //layout
+
+        // Window insets
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
             getWindow().getDecorView().setOnApplyWindowInsetsListener((v, insets) -> {
                 int topInset = insets.getInsets(WindowInsets.Type.statusBars()).top;
@@ -80,7 +80,7 @@ public class HomeActivity extends AppCompatActivity {
 
         initViews();
         setupGreeting();
-        setupDriverName(); // 👈 Added method for showing driver name
+        setupDriverName();
         setupClickListeners();
         setupBottomNavigation();
 
@@ -99,36 +99,62 @@ public class HomeActivity extends AppCompatActivity {
         }
 
         createNotificationChannel();
-        initializeSignalR();
+        initializeSignalR(); // ✅ Only starts the connection, listener registered in onResume
     }
 
-    private void setupDriverName() {
-        String driverName = getDriverName();
-
-        // Extract only first name if needed
-        if (driverName.contains(" ")) {
-            driverName = driverName.split(" ")[0];
-        }
-
-        // Capitalize first letter
-        if (!driverName.isEmpty()) {
-            driverName = driverName.substring(0, 1).toUpperCase() + driverName.substring(1);
-        }
-
-        txtWelcome.setText("Welcome back, " + driverName);
+    @Override
+    protected void onResume() {
+        super.onResume();
+        bottomNavigationView.setSelectedItemId(R.id.nav_home);
+        registerOtpListener(); // ✅ Register listener every time screen becomes active
     }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // ✅ Remove listener when screen goes background — prevents ghost callbacks
+        if (signalRManager != null && otpListener != null) {
+            signalRManager.removeOtpListener(otpListener);
+            Log.d(TAG, "OTP listener removed in onPause");
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // Note: Do NOT disconnect SignalR here if you want it alive across screens.
+        // Only disconnect on full app exit (use a Service or Application class for that).
+    }
+
+    // ─── SignalR ──────────────────────────────────────────────────────────────
 
     private void initializeSignalR() {
         Log.d(TAG, "==== Initializing SignalR ====");
         signalRManager = SignalRManager.getInstance();
 
-        signalRManager.setOtpListener(new SignalRManager.OtpListener() {
+        new Thread(() -> {
+            try {
+                signalRManager.connect(APIs.SIGNALR_HUB_URL, driverId);
+            } catch (Exception e) {
+                runOnUiThread(() ->
+                        Toast.makeText(HomeActivity.this,
+                                "Failed to connect: " + e.getMessage(), Toast.LENGTH_LONG).show());
+            }
+        }).start();
+    }
+
+    private void registerOtpListener() {
+        signalRManager = SignalRManager.getInstance();
+
+        // ✅ Create a new listener instance
+        otpListener = new SignalRManager.OtpListener() {
             @Override
-            public void onOtpReceived(int requestId, String otp, int driverId, String timestamp) {
+            public void onOtpReceived(int requestId, String otp, int driverId,
+                                      String timestamp, double totalAmount, double distance) { // <-- updated
                 runOnUiThread(() -> {
-                    Log.d(TAG, "OTP RECEIVED: " + otp);
-                    showOtpDialog(requestId, otp);
-                    showOtpNotification(requestId, otp);
+                    Log.d(TAG, "OTP RECEIVED on HomeActivity: " + otp);
+                    showOtpDialog(requestId, otp, totalAmount, distance);  // <-- pass new fields
+                    showOtpNotification(requestId, otp, totalAmount, distance);  // <-- pass new fields
                 });
             }
 
@@ -143,26 +169,25 @@ public class HomeActivity extends AppCompatActivity {
             @Override
             public void onError(Exception exception) {
                 runOnUiThread(() ->
-                        Toast.makeText(HomeActivity.this, "Connection error: " + exception.getMessage(),
-                                Toast.LENGTH_LONG).show());
-            }
-        });
-
-        new Thread(() -> {
-            try {
-                signalRManager.connect(APIs.SIGNALR_HUB_URL, driverId);
-            } catch (Exception e) {
-                runOnUiThread(() ->
                         Toast.makeText(HomeActivity.this,
-                                "Failed to connect: " + e.getMessage(), Toast.LENGTH_LONG).show());
+                                "Connection error: " + exception.getMessage(), Toast.LENGTH_LONG).show());
             }
-        }).start();
+        };
+
+        // ✅ Add (not replace) this listener
+        signalRManager.addOtpListener(otpListener);
+        Log.d(TAG, "OTP listener registered in HomeActivity");
     }
 
-    private void showOtpDialog(int requestId, String otp) {
+    // ─── OTP Dialog & Notification ───────────────────────────────────────────
+
+    private void showOtpDialog(int requestId, String otp, double totalAmount, double distance) {
         new AlertDialog.Builder(this)
                 .setTitle("🚕 New Bill Request")
-                .setMessage("Request ID: " + requestId + "\n\nOTP: " + otp)
+                .setMessage("Request ID: " + requestId +
+                        "\n\nOTP: " + otp +
+                        "\n\nTotal Amount: ₹" + String.format("%.2f", totalAmount) +  // <-- add
+                        "\nDistance: " + distance + " km")                             // <-- add
                 .setPositiveButton("OK", (dialog, which) -> dialog.dismiss())
                 .setNegativeButton("Copy OTP", (dialog, which) -> {
                     ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
@@ -174,11 +199,13 @@ public class HomeActivity extends AppCompatActivity {
                 .show();
     }
 
-    private void showOtpNotification(int requestId, String otp) {
+    private void showOtpNotification(int requestId, String otp, double totalAmount, double distance) {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_notification)
                 .setContentTitle("🚕 New Ride Request")
-                .setContentText("Request ID: " + requestId + " - OTP: " + otp)
+                .setContentText("OTP: " + otp +
+                        " | ₹" + String.format("%.2f", totalAmount) +  // <-- add
+                        " | " + distance + " km")                       // <-- add
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setAutoCancel(true)
                 .setDefaults(NotificationCompat.DEFAULT_ALL);
@@ -202,6 +229,8 @@ public class HomeActivity extends AppCompatActivity {
         }
     }
 
+    // ─── Helpers ─────────────────────────────────────────────────────────────
+
     private int getDriverId() {
         SharedPreferences prefs = getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
         return prefs.getInt("user_id", 0);
@@ -210,6 +239,17 @@ public class HomeActivity extends AppCompatActivity {
     private String getDriverName() {
         SharedPreferences prefs = getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
         return prefs.getString("user_name", "Driver");
+    }
+
+    private void setupDriverName() {
+        String driverName = getDriverName();
+        if (driverName.contains(" ")) {
+            driverName = driverName.split(" ")[0];
+        }
+        if (!driverName.isEmpty()) {
+            driverName = driverName.substring(0, 1).toUpperCase() + driverName.substring(1);
+        }
+        txtWelcome.setText("Welcome back, " + driverName);
     }
 
     private void initViews() {
@@ -231,17 +271,14 @@ public class HomeActivity extends AppCompatActivity {
     private void setupClickListeners() {
         cardScanQR.setOnClickListener(v ->
                 startActivity(new Intent(HomeActivity.this, QRActivity.class)));
-        // Profile icon click
+
         cardProfileIcon.setOnClickListener(v -> {
             Intent intent = new Intent(HomeActivity.this, ProfileActivity.class);
             startActivity(intent);
         });
 
-        // Notification button click
-        cardNotifications.setOnClickListener(v -> {
-            // TODO: Implement notifications activity/functionality
-            Toast.makeText(this, "Notifications", Toast.LENGTH_SHORT).show();
-        });
+        cardNotifications.setOnClickListener(v ->
+                Toast.makeText(this, "Notifications", Toast.LENGTH_SHORT).show());
     }
 
     private void setupBottomNavigation() {
@@ -259,19 +296,5 @@ public class HomeActivity extends AppCompatActivity {
             overridePendingTransition(0, 0);
             return true;
         });
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        bottomNavigationView.setSelectedItemId(R.id.nav_home);
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (signalRManager != null) {
-            signalRManager.disconnect();
-        }
     }
 }

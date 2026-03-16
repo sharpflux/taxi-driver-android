@@ -44,13 +44,14 @@ public class QRActivity extends AppCompatActivity {
     private ImageView qrCodeImage, btnBack;
     private BottomNavigationView bottomNavigationView;
     private SignalRManager signalRManager;
+    private SignalRManager.OtpListener otpListener; // ✅ stored reference for clean removal
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_qr);
 
-        // Notification bar
+        // Notification bar styling
         Window window = getWindow();
         if ((getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK)
                 == Configuration.UI_MODE_NIGHT_YES) {
@@ -61,7 +62,7 @@ public class QRActivity extends AppCompatActivity {
             window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
         }
 
-        // Layout insets
+        // Window insets
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
             getWindow().getDecorView().setOnApplyWindowInsetsListener((v, insets) -> {
                 int topInset = insets.getInsets(WindowInsets.Type.statusBars()).top;
@@ -78,6 +79,7 @@ public class QRActivity extends AppCompatActivity {
 
         initViews();
         setupListeners();
+        setupBottomNavigation();
 
         // Request notification permission (Android 13+)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -96,36 +98,45 @@ public class QRActivity extends AppCompatActivity {
         fetchAndSaveQRCode(driverId, qrFile);
     }
 
-    // ─── OTP Listener: register when screen is visible ───────────────────────
+    // ─── Lifecycle: register/unregister listener ──────────────────────────────
 
     @Override
     protected void onResume() {
         super.onResume();
-        registerOtpListener();
+        registerOtpListener(); // ✅ Always register when screen is visible
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        if (signalRManager != null) {
-            signalRManager.setOtpListener(null);
+        // ✅ Remove listener when screen goes to background
+        if (signalRManager != null && otpListener != null) {
+            signalRManager.removeOtpListener(otpListener);
+            Log.d(TAG, "OTP listener removed in onPause");
         }
     }
+
+    // ─── SignalR ──────────────────────────────────────────────────────────────
 
     private void registerOtpListener() {
         signalRManager = SignalRManager.getInstance();
 
-        signalRManager.setOtpListener(new SignalRManager.OtpListener() {
+        // ✅ Create listener instance
+        otpListener = new SignalRManager.OtpListener() {
             @Override
-            public void onOtpReceived(int requestId, String otp, int driverId, String timestamp) {
+            public void onOtpReceived(int requestId, String otp, int driverId,
+                                      String timestamp, double totalAmount, double distance) {
                 runOnUiThread(() -> {
-                    showOtpDialog(requestId, otp);
-                    showOtpNotification(requestId, otp);
+                    Log.d(TAG, "OTP RECEIVED on QRActivity: " + otp +
+                            " Amount: " + totalAmount + " Distance: " + distance);
+                    showOtpDialog(requestId, otp, totalAmount, distance);
+                    showOtpNotification(requestId, otp, totalAmount, distance);
                 });
             }
 
             @Override
             public void onConnectionStateChanged(boolean isConnected) {
+                // Optional: show connection state in QR screen if needed
             }
 
             @Override
@@ -135,29 +146,51 @@ public class QRActivity extends AppCompatActivity {
                                 "Connection error: " + exception.getMessage(),
                                 Toast.LENGTH_SHORT).show());
             }
-        });
+        };
+
+        // ✅ Add (not replace) this listener
+        signalRManager.addOtpListener(otpListener);
+        Log.d(TAG, "OTP listener registered in QRActivity");
     }
 
-    private void showOtpDialog(int requestId, String otp) {
+    // ─── OTP Dialog & Notification ───────────────────────────────────────────
+
+    private void showOtpDialog(int requestId, String otp,
+                               double totalAmount, double distance) {
         new AlertDialog.Builder(this)
                 .setTitle("🚕 New Bill Request")
-                .setMessage("Request ID: " + requestId + "\n\nOTP: " + otp)
+                .setMessage(
+                        "Request ID: " + requestId +
+                                "\n\nOTP: " + otp +
+                                "\n\nTotal Amount: ₹" + String.format("%.2f", totalAmount) +
+                                "\nDistance: " + distance + " km"
+                )
                 .setPositiveButton("OK", (dialog, which) -> dialog.dismiss())
                 .setNegativeButton("Copy OTP", (dialog, which) -> {
-                    ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+                    ClipboardManager clipboard =
+                            (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
                     ClipData clip = ClipData.newPlainText("OTP", otp);
                     clipboard.setPrimaryClip(clip);
-                    Toast.makeText(QRActivity.this, "OTP copied to clipboard", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(QRActivity.this, "OTP copied to clipboard",
+                            Toast.LENGTH_SHORT).show();
                 })
                 .setCancelable(false)
                 .show();
     }
 
-    private void showOtpNotification(int requestId, String otp) {
+    private void showOtpNotification(int requestId, String otp,
+                                     double totalAmount, double distance) {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_notification)
                 .setContentTitle("🚕 New Ride Request")
-                .setContentText("Request ID: " + requestId + " - OTP: " + otp)
+                .setContentText("OTP: " + otp +
+                        " | ₹" + String.format("%.2f", totalAmount) +
+                        " | " + distance + " km")
+                .setStyle(new NotificationCompat.BigTextStyle()
+                        .bigText("Request ID: " + requestId +
+                                "\nOTP: " + otp +
+                                "\nTotal Amount: ₹" + String.format("%.2f", totalAmount) +
+                                "\nDistance: " + distance + " km"))
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setAutoCancel(true)
                 .setDefaults(NotificationCompat.DEFAULT_ALL);
@@ -180,6 +213,9 @@ public class QRActivity extends AppCompatActivity {
             manager.createNotificationChannel(channel);
         }
     }
+
+    // ─── Views & Navigation ──────────────────────────────────────────────────
+
     private void initViews() {
         qrCodeImage = findViewById(R.id.qrCodeImage);
         btnBack = findViewById(R.id.btnBack);
@@ -191,6 +227,10 @@ public class QRActivity extends AppCompatActivity {
     }
 
     private void setupBottomNavigation() {
+        if (bottomNavigationView == null) {
+            Log.w(TAG, "BottomNavigationView not found in layout, skipping setup");
+            return;
+        }
         bottomNavigationView.setSelectedItemId(R.id.nav_scanner);
 
         bottomNavigationView.setOnItemSelectedListener(item -> {
@@ -216,6 +256,8 @@ public class QRActivity extends AppCompatActivity {
             return false;
         });
     }
+
+    // ─── Helpers ─────────────────────────────────────────────────────────────
 
     private int getDriverId() {
         return getSharedPreferences("MyAppPrefs", MODE_PRIVATE).getInt("user_id", 0);
